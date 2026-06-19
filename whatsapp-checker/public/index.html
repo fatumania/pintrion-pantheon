@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phone Checker v3</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',system-ui,sans-serif;background:#08080d;color:#e0e0e0;min-height:100vh}
+        .header{background:linear-gradient(135deg,#1a2a3a,#0f2a2f,#1a3a2a);padding:20px 32px;border-bottom:1px solid #2a4a5f;display:flex;justify-content:space-between;align-items:center}
+        .header h1{font-size:22px;font-weight:600;color:#60a5fa}
+        .header .status{padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600}
+        .status-ok{background:#1a3a1a;color:#4ade80;border:1px solid #2a5a3f}
+        .status-off{background:#3a1a1a;color:#f87171;border:1px solid #5a2a2a}
+        .container{max-width:1200px;margin:0 auto;padding:20px}
+        .nav{display:flex;gap:4px;background:#10101a;padding:5px;border-radius:10px;margin-bottom:20px;border:1px solid #222;flex-wrap:wrap}
+        .nav-btn{padding:9px 18px;background:0 0;border:0;color:#7a8ba8;cursor:pointer;border-radius:6px;font-size:13px;transition:.15s}
+        .nav-btn:hover{color:#ccc;background:#1a1a28}
+        .nav-btn.active{background:#60a5fa;color:#000;font-weight:600}
+        .page{display:none}.page.active{display:block}
+        .card{background:#10101a;border:1px solid #222;border-radius:10px;padding:20px;margin-bottom:14px}
+        .card h3{color:#60a5fa;font-size:15px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #1a1a28}
+        label{display:block;color:#7a8ba8;font-size:12px;margin-bottom:5px;margin-top:10px}
+        input[type="text"],input[type="number"],textarea,select{width:100%;padding:10px 12px;background:#14141f;border:1px solid #2a2a3a;border-radius:7px;color:#fff;font-size:13px;outline:0;transition:.2s;font-family:inherit}
+        input:focus,textarea:focus,select:focus{border-color:#60a5fa}
+        textarea{min-height:80px;resize:vertical;font-family:'Cascadia Code',monospace;font-size:12px}
+        .btn{padding:10px 20px;border:0;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:6px}
+        .btn:disabled{opacity:.4;cursor:not-allowed}
+        .btn-primary{background:linear-gradient(135deg,#60a5fa,#3b82f6);color:#fff}
+        .btn-primary:hover:not(:disabled){box-shadow:0 4px 20px rgba(96,165,250,.3)}
+        .btn-success{background:linear-gradient(135deg,#25d366,#128c7e);color:#fff}
+        .btn-success:hover:not(:disabled){box-shadow:0 4px 20px rgba(37,211,102,.3)}
+        .btn-danger{background:linear-gradient(135deg,#f87171,#dc2626);color:#fff}
+        .btn-secondary{background:#222;color:#aaa;border:1px solid #333}
+        .btn-sm{padding:6px 12px;font-size:11px}
+        .row{display:flex;gap:10px}.row>*{flex:1}
+        .btn-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+        .hint{color:#444;font-size:11px;margin-top:3px}
+        .qr-box{text-align:center;padding:20px;background:#14141f;border-radius:10px;border:1px dashed #333}
+        .qr-box img{max-width:280px;border-radius:8px}
+        .result-table{width:100%;border-collapse:collapse;font-size:12px}
+        .result-table th{text-align:left;padding:6px 8px;background:#14141f;color:#60a5fa;border-bottom:1px solid #222;position:sticky;top:0;z-index:1}
+        .result-table td{padding:5px 8px;border-bottom:1px solid #1a1a28}
+        .result-table tr:hover td{background:#14141f}
+        .table-wrap{max-height:55vh;overflow:auto;border-radius:8px;border:1px solid #222}
+        .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+        .badge-yes{background:#1a3a1a;color:#4ade80}
+        .badge-no{background:#3a1a1a;color:#f87171}
+        .badge-err{background:#3a3a1a;color:#facc15}
+        .badge-info{background:#1a2a3a;color:#60a5fa}
+        .badge-inv{background:#2a2a3a;color:#7a8ba8}
+        .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+        .stat{text-align:center;padding:10px;background:#14141f;border-radius:7px}
+        .stat .num{font-size:20px;font-weight:700;color:#60a5fa}
+        .stat .lbl{font-size:11px;color:#555;margin-top:2px}
+        .empty-msg{color:#444;text-align:center;padding:24px;font-size:13px}
+        .progress-bar-bg{width:100%;height:8px;background:#1a1a28;border-radius:4px;overflow:hidden;margin:10px 0}
+        .progress-bar-fill{height:100%;background:linear-gradient(90deg,#60a5fa,#3b82f6);border-radius:4px;transition:width .3s;width:0}
+        .file-drop{border:2px dashed #333;border-radius:10px;padding:30px;text-align:center;cursor:pointer;transition:.2s}
+        .file-drop:hover,.file-drop.active{border-color:#60a5fa;background:#14141f}
+        .file-drop .icon{font-size:36px;margin-bottom:8px}
+        .file-drop p{color:#555;font-size:13px}
+        .file-drop .formats{color:#333;font-size:11px;margin-top:4px}
+        .speed-control{display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px;background:#14141f;border-radius:7px;flex-wrap:wrap}
+        .speed-control label{margin:0;color:#7a8ba8;font-size:12px}
+        .speed-control select{background:#1a1a28;border:1px solid #333;border-radius:5px;color:#fff;padding:4px 8px;font-size:12px}
+        .phase{font-size:12px;color:#60a5fa;margin-bottom:4px}
+        .services-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:14px}
+        .service-card{padding:14px;background:#14141f;border-radius:8px;border:1px solid #222;cursor:pointer;transition:.2s}
+        .service-card:hover{border-color:#60a5fa}
+        .service-card.active{border-color:#60a5fa;background:#1a2a3a}
+        .service-card .svc-name{font-size:14px;font-weight:600;color:#e0e0e0}
+        .service-card .svc-desc{font-size:11px;color:#555;margin-top:4px}
+        .service-card .svc-icon{font-size:20px;margin-bottom:6px}
+        .service-card input[type="checkbox"]{margin-right:6px}
+        .single-result{margin-top:12px;padding:14px;background:#14141f;border-radius:8px;border:1px solid #222}
+        .single-result h4{color:#60a5fa;font-size:13px;margin-bottom:10px}
+        .result-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1a1a28;font-size:12px}
+        .result-row:last-child{border:0}
+        .result-label{color:#555}
+        .result-value{color:#e0e0e0;font-weight:500}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Phone Checker</h1>
+        <span class="status status-off" id="connStatus">WhatsApp: offline</span>
+    </div>
+    <div class="container">
+        <div class="nav">
+            <button class="nav-btn active" onclick="showPage('connect',this)">WhatsApp</button>
+            <button class="nav-btn" onclick="showPage('validate',this)">Валидация</button>
+            <button class="nav-btn" onclick="showPage('single',this)">Проверка</button>
+            <button class="nav-btn" onclick="showPage('batch',this)">Массовая</button>
+            <button class="nav-btn" onclick="showPage('files',this)">Файлы</button>
+        </div>
+
+        <div class="page active" id="page-connect">
+            <div class="card">
+                <h3>Подключение к WhatsApp</h3>
+                <p style="color:#555;font-size:12px;margin-bottom:14px;">Для проверки номеров в WhatsApp необходима привязка аккаунта.</p>
+                <div class="qr-box" id="qrBox"><p>Нажмите "Подключить" и отсканируйте QR код</p></div>
+                <div class="btn-row"><button class="btn btn-success" onclick="connect()" id="connectBtn">Подключить WhatsApp</button></div>
+            </div>
+        </div>
+
+        <div class="page" id="page-validate">
+            <div class="card">
+                <h3>Валидация номера</h3>
+                <p style="color:#555;font-size:12px;margin-bottom:10px;">Проверка формата, страны, оператора и типа номера. Работает без API — всё локально.</p>
+                <div class="row">
+                    <div style="flex:3">
+                        <input type="text" id="validateInput" placeholder="+37360012345 или 79001234567">
+                    </div>
+                    <div style="flex:1">
+                        <select id="validateCountry">
+                            <option value="MD">Молдова (+373)</option>
+                            <option value="RU">Россия (+7)</option>
+                            <option value="UA">Украина (+380)</option>
+                            <option value="RO">Румыния (+40)</option>
+                            <option value="GB">Великобритания (+44)</option>
+                            <option value="DE">Германия (+49)</option>
+                            <option value="US">США (+1)</option>
+                            <option value="FR">Франция (+33)</option>
+                            <option value="ES">Испания (+34)</option>
+                            <option value="IT">Италия (+39)</option>
+                            <option value="PL">Польша (+48)</option>
+                            <option value="TR">Турция (+90)</option>
+                            <option value="CN">Китай (+86)</option>
+                            <option value="IN">Индия (+91)</option>
+                            <option value="JP">Япония (+81)</option>
+                        </select>
+                    </div>
+                    <div style="flex:1"><button class="btn btn-primary" onclick="validateSingle()" style="width:100%">Проверить</button></div>
+                </div>
+                <div class="hint">Формат: код страны + номер. Пример: +37360012345, +447852462672</div>
+                <div id="validateResult"></div>
+            </div>
+        </div>
+
+        <div class="page" id="page-single">
+            <div class="card">
+                <h3>Проверить номер</h3>
+                <p style="color:#555;font-size:12px;margin-bottom:10px;">Валидация + проверка в WhatsApp (если подключён).</p>
+                <div class="row">
+                    <div style="flex:3"><input type="text" id="phoneInput" placeholder="79001234567 (код страны + номер)"></div>
+                    <div style="flex:1"><button class="btn btn-primary" onclick="checkSingle()" style="width:100%">Проверить</button></div>
+                </div>
+                <div class="hint">Формат: код страны + номер без пробелов и знаков. Пример: 79001234567, 447852462672</div>
+                <div id="singleResult"></div>
+            </div>
+        </div>
+
+        <div class="page" id="page-batch">
+            <div class="card">
+                <h3>Массовая проверка</h3>
+                <div class="file-drop" id="fileDrop" onclick="document.getElementById('fileInput').click()">
+                    <div class="icon">&#128194;</div>
+                    <p>Перетащите файл или нажмите для выбора</p>
+                    <div class="formats">JSON, CSV, TXT — извлечёт все номера автоматически</div>
+                </div>
+                <input type="file" id="fileInput" accept=".json,.csv,.txt" style="display:none" onchange="handleFile(this)">
+
+                <label>Или вставьте номера вручную</label>
+                <textarea id="batchInput" placeholder="79001234567&#10;447852462672&#10;37360012345"></textarea>
+
+                <label>Какие проверки выполнять:</label>
+                <div class="services-grid">
+                    <div class="service-card active" onclick="toggleService(this,'validation')">
+                        <div class="svc-icon">&#128269;</div>
+                        <div class="svc-name"><input type="checkbox" checked disabled> Валидация</div>
+                        <div class="svc-desc">Формат, страна, оператор, тип</div>
+                    </div>
+                    <div class="service-card" onclick="toggleService(this,'whatsapp')">
+                        <div class="svc-icon">&#128172;</div>
+                        <div class="svc-name"><input type="checkbox"> WhatsApp</div>
+                        <div class="svc-desc">Зарегистрирован ли номер</div>
+                    </div>
+                </div>
+
+                <div class="speed-control">
+                    <label>Страна по умолчанию:</label>
+                    <select id="batchCountry">
+                        <option value="MD">Молдова</option>
+                        <option value="RU">Россия</option>
+                        <option value="UA">Украина</option>
+                        <option value="GB">Великобритания</option>
+                        <option value="DE">Германия</option>
+                    </select>
+                    <label>Задержка:</label>
+                    <select id="delaySelect">
+                        <option value="500">Быстро (0.5 сек)</option>
+                        <option value="1000">Нормально (1 сек)</option>
+                        <option value="1500" selected>Безопасно (1.5 сек)</option>
+                        <option value="3000">Медленно (3 сек)</option>
+                    </select>
+                </div>
+
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="startBatch()">Начать проверку</button>
+                    <button class="btn btn-danger" onclick="stopBatch()" id="stopBtn" style="display:none;">Остановить</button>
+                    <button class="btn btn-secondary" onclick="downloadResults()" id="dlBtn" style="display:none;">Скачать JSON</button>
+                    <button class="btn btn-secondary" onclick="downloadCSV()" id="dlCsvBtn" style="display:none;">Скачать CSV</button>
+                </div>
+            </div>
+
+            <div class="card" id="progressCard" style="display:none;">
+                <h3>Прогресс</h3>
+                <div class="phase" id="phaseLabel"></div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="batchBar"></div></div>
+                <div class="stats">
+                    <div class="stat"><div class="num" id="statCurrent">0</div><div class="lbl">Проверено</div></div>
+                    <div class="stat"><div class="num" id="statTotal">0</div><div class="lbl">Всего</div></div>
+                    <div class="stat"><div class="num" id="statValid" style="color:#4ade80">0</div><div class="lbl">Валидных</div></div>
+                    <div class="stat"><div class="num" id="statInvalid" style="color:#f87171">0</div><div class="lbl">Невалидных</div></div>
+                </div>
+            </div>
+
+            <div class="card" id="resultsCard" style="display:none;">
+                <h3>Результаты <span id="resultCount" style="color:#60a5fa;font-size:13px;"></span></h3>
+                <div class="table-wrap">
+                    <table class="result-table">
+                        <thead><tr><th>#</th><th>Номер</th><th>Страна</th><th>Тип</th><th>Валиден</th><th>WhatsApp</th><th>Формат</th></tr></thead>
+                        <tbody id="batchBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="page" id="page-files">
+            <div class="card">
+                <h3>Сохранённые файлы</h3>
+                <div id="filesList"><div class="empty-msg">Загрузка...</div></div>
+            </div>
+        </div>
+    </div>
+
+<script>
+var pollInterval=null,batchPhones=[],selectedServices=['validation'];
+
+function showPage(id,btn){
+    document.querySelectorAll(".page").forEach(function(p){p.className="page"});
+    document.querySelectorAll(".nav-btn").forEach(function(b){b.className="nav-btn"});
+    document.getElementById("page-"+id).className="page active";
+    if(btn)btn.className="nav-btn active";
+    if(id==="files")loadFiles();
+}
+
+function toggleService(el,svc){
+    if(svc==='validation')return;
+    var cb=el.querySelector('input[type="checkbox"]');
+    if(cb.checked){cb.checked=false;el.classList.remove('active');selectedServices=selectedServices.filter(function(s){return s!==svc})}
+    else{cb.checked=true;el.classList.add('active');if(!selectedServices.includes(svc))selectedServices.push(svc)}
+}
+
+function updateStatus(){
+    fetch("/api/status").then(function(r){return r.json()}).then(function(d){
+        var el=document.getElementById("connStatus");
+        if(d.ready){
+            el.textContent="WhatsApp: online";el.className="status status-ok";
+        }else if(d.qr){
+            el.textContent="WhatsApp: QR";el.className="status status-off";
+            showQR(d.qr);
+        }else{
+            el.textContent="WhatsApp: offline";el.className="status status-off";
+        }
+    });
+}
+
+function connect(){
+    document.getElementById("connectBtn").disabled=true;
+    fetch("/api/connect",{method:"POST"}).then(function(r){return r.json()}).then(function(d){
+        alert(d.message);
+        if(pollInterval)clearInterval(pollInterval);
+        pollInterval=setInterval(updateStatus,3000);
+    });
+}
+
+function showQR(qr){
+    document.getElementById("qrBox").innerHTML=
+        "<p style='margin-bottom:10px;color:#60a5fa;'>Отсканируйте QR код</p>"+
+        "<img src='https://api.qrserver.com/v1/create-qr-code/?size=280x280&data="+encodeURIComponent(qr)+"'>"+
+        "<p style='margin-top:10px;font-size:11px;color:#555;'>WhatsApp → Настройки → Привязанные устройства</p>";
+}
+
+function validateSingle(){
+    var phone=document.getElementById("validateInput").value.trim();
+    var country=document.getElementById("validateCountry").value;
+    if(!phone)return alert("Введите номер");
+    document.getElementById("validateResult").innerHTML="<div style='color:#7a8ba8;'>Проверка...</div>";
+    fetch("/api/validate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({phone:phone,country:country})})
+    .then(function(r){return r.json()}).then(function(d){
+        var el=document.getElementById("validateResult");
+        if(d.error){el.innerHTML="<div class='single-result'><span class='badge badge-err'>Ошибка</span> "+d.error+"</div>";return}
+        var html="<div class='single-result'>"+
+            "<h4>"+(d.valid?"&#10004; Валидный номер":"&#10008; Невалидный номер")+"</h4>"+
+            "<div class='result-row'><span class='result-label'>Страна</span><span class='result-value'>"+d.country+"</span></div>"+
+            "<div class='result-row'><span class='result-label'>Код страны</span><span class='result-value'>"+d.countryCode+"</span></div>"+
+            "<div class='result-row'><span class='result-label'>Номер</span><span class='result-value'>"+d.nationalNumber+"</span></div>"+
+            "<div class='result-row'><span class='result-label'>Тип</span><span class='result-value'>"+d.type+"</span></div>"+
+            "<div class='result-row'><span class='result-label'>E.164</span><span class='result-value'>"+d.formatted+"</span></div>"+
+            "<div class='result-row'><span class='result-label'>Национальный</span><span class='result-value'>"+d.formattedNational+"</span></div>"+
+            "</div>";
+        el.innerHTML=html;
+    });
+}
+
+function checkSingle(){
+    var phone=document.getElementById("phoneInput").value.trim();
+    if(!phone)return alert("Введите номер");
+    document.getElementById("singleResult").innerHTML="<div style='color:#7a8ba8;'>Проверка...</div>";
+    fetch("/api/check",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({phone:phone})})
+    .then(function(r){return r.json()}).then(function(d){
+        var el=document.getElementById("singleResult");
+        if(d.error){el.innerHTML="<div style='color:#f87171;'>Ошибка: "+d.error+"</div>";return}
+        var v=d.validation||{};
+        var w=d.whatsapp||{};
+        var html="<div class='single-result'>"+
+            "<h4>"+d.phone+"</h4>"+
+            "<div class='result-row'><span class='result-label'>Валиден</span><span class='result-value'>"+(v.valid?"&#10004; Да":"&#10008; Нет")+"</span></div>"+
+            "<div class='result-row'><span class='result-label'>Страна</span><span class='result-value'>"+(v.country||"-")+"</span></div>"+
+            "<div class='result-row'><span class='result-label'>Тип</span><span class='result-value'>"+(v.type||"-")+"</span></div>"+
+            "<div class='result-row'><span class='result-label'>E.164</span><span class='result-value'>"+(v.formatted||"-")+"</span></div>";
+        if(w.status){
+            html+="<div class='result-row'><span class='result-label'>WhatsApp</span><span class='result-value'>"+(w.registered?"<span class='badge badge-yes'>Зарегистрирован</span>":"<span class='badge badge-no'>Не найден</span>")+"</span></div>";
+            if(w.profile_pic)html+="<div class='result-row'><span class='result-label'>Фото</span><span class='result-value'><img src='"+w.profile_pic+"' style='width:32px;height:32px;border-radius:50%;'></span></div>";
+        }
+        html+="</div>";
+        el.innerHTML=html;
+    });
+}
+
+function handleFile(inp){
+    if(!inp.files.length)return;
+    var file=inp.files[0];
+    var fd=new FormData();
+    fd.append("file",file);
+    document.getElementById("batchInput").value="Загрузка файла...";
+    fetch("/api/upload",{method:"POST",body:fd}).then(function(r){return r.json()}).then(function(d){
+        if(d.error){alert(d.error);document.getElementById("batchInput").value="";return}
+        batchPhones=d.phones;
+        document.getElementById("batchInput").value=d.phones.join("\n");
+        alert("Найдено "+d.count+" номеров в файле "+d.filename);
+    });
+}
+
+var fileDrop=document.getElementById("fileDrop");
+fileDrop.addEventListener("dragover",function(e){e.preventDefault();fileDrop.classList.add("active")});
+fileDrop.addEventListener("dragleave",function(){fileDrop.classList.remove("active")});
+fileDrop.addEventListener("drop",function(e){
+    e.preventDefault();fileDrop.classList.remove("active");
+    if(e.dataTransfer.files.length){
+        var fd=new FormData();fd.append("file",e.dataTransfer.files[0]);
+        document.getElementById("batchInput").value="Загрузка...";
+        fetch("/api/upload",{method:"POST",body:fd}).then(function(r){return r.json()}).then(function(d){
+            if(d.error){alert(d.error);document.getElementById("batchInput").value="";return}
+            batchPhones=d.phones;
+            document.getElementById("batchInput").value=d.phones.join("\n");
+            alert("Найдено "+d.count+" номеров");
+        });
+    }
+});
+
+function startBatch(){
+    var lines=document.getElementById("batchInput").value.trim().split("\n").filter(function(l){return l.trim()});
+    if(!lines.length)return alert("Введите номера или загрузите файл");
+    var delay=parseInt(document.getElementById("delaySelect").value)||1500;
+    var country=document.getElementById("batchCountry").value;
+    if(!confirm("Проверить "+lines.length+" номеров?\nПроверки: "+selectedServices.join(", ")))return;
+
+    fetch("/api/check-batch",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({phones:lines,services:selectedServices,delay:delay,country:country})})
+    .then(function(r){return r.json()}).then(function(d){
+        if(d.error)return alert(d.error);
+        document.getElementById("progressCard").style.display="block";
+        document.getElementById("resultsCard").style.display="block";
+        document.getElementById("stopBtn").style.display="inline-flex";
+        document.getElementById("dlBtn").style.display="none";
+        document.getElementById("dlCsvBtn").style.display="none";
+        startBatchPolling();
+    });
+}
+
+function stopBatch(){
+    fetch("/api/check-batch",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({phones:[]})}).catch(function(){});
+    fetch("/api/check-progress").then(function(r){return r.json()}).then(function(d){
+        if(d.status!=="done")alert("Остановка...");
+    });
+}
+
+function startBatchPolling(){
+    if(pollInterval)clearInterval(pollInterval);
+    pollInterval=setInterval(pollBatch,2000);
+}
+
+function pollBatch(){
+    fetch("/api/check-progress").then(function(r){return r.json()}).then(function(p){
+        document.getElementById("statCurrent").textContent=p.current||0;
+        document.getElementById("statTotal").textContent=p.total||0;
+        var pct=p.total?(p.current/p.total*100):0;
+        document.getElementById("batchBar").style.width=pct+"%";
+        document.getElementById("phaseLabel").textContent=p.status||"";
+
+        if(p.status==="done"){
+            clearInterval(pollInterval);
+            document.getElementById("stopBtn").style.display="none";
+            document.getElementById("dlBtn").style.display="inline-flex";
+            document.getElementById("dlCsvBtn").style.display="inline-flex";
+            loadBatchResults();
+        }
+    });
+
+    fetch("/api/results").then(function(r){return r.json()}).then(function(results){
+        if(!results.length)return;
+        document.getElementById("resultCount").textContent="("+results.length+")";
+        var tbody=document.getElementById("batchBody");
+        var recent=results.slice(-100).reverse();
+        var validCount=0,invalidCount=0,waYes=0,waNo=0;
+        results.forEach(function(r){
+            if(r.validation&&r.validation.valid)validCount++;else invalidCount++;
+            if(r.services&&r.services.whatsapp&&r.services.whatsapp.registered)waYes++;
+            if(r.services&&r.services.whatsapp&&r.services.whatsapp.registered===false)waNo++;
+        });
+        document.getElementById("statValid").textContent=validCount;
+        document.getElementById("statInvalid").textContent=invalidCount;
+
+        tbody.innerHTML=recent.map(function(r,i){
+            var v=r.validation||{};
+            var w=r.services?r.services.whatsapp||{}:{};
+            var vBadge=v.valid?'<span class="badge badge-yes">Да</span>':'<span class="badge badge-no">Нет</span>';
+            var wBadge="-";
+            if(w.status==="registered")wBadge='<span class="badge badge-yes">Да</span>';
+            else if(w.status==="not_registered")wBadge='<span class="badge badge-no">Нет</span>';
+            else if(w.status==="error")wBadge='<span class="badge badge-err">'+w.error+'</span>';
+            return"<tr><td>"+(results.length-i)+"</td>"+
+                "<td><strong>"+r.phone+"</strong></td>"+
+                "<td>"+(v.country||"-")+"</td>"+
+                "<td>"+(v.type||"-")+"</td>"+
+                "<td>"+vBadge+"</td>"+
+                "<td>"+wBadge+"</td>"+
+                "<td style='font-size:10px;color:#555'>"+(v.formatted||"-")+"</td></tr>";
+        }).join("");
+    });
+}
+
+function loadBatchResults(){
+    fetch("/api/results").then(function(r){return r.json()}).then(function(results){
+        var valid=results.filter(function(r){return r.validation&&r.validation.valid}).length;
+        var invalid=results.filter(function(r){return !r.validation||!r.validation.valid}).length;
+        document.getElementById("statValid").textContent=valid;
+        document.getElementById("statInvalid").textContent=invalid;
+    });
+}
+
+function downloadResults(){window.location="/api/download-results"}
+function downloadCSV(){
+    fetch("/api/results").then(function(r){return r.json()}).then(function(results){
+        var csv="Phone,Valid,Country,Type,E164,WhatsApp,Error\n";
+        results.forEach(function(r){
+            var v=r.validation||{};
+            var w=r.services?r.services.whatsapp||{}:{};
+            csv+='"'+r.phone+'",'+(v.valid||false)+',"'+(v.country||"")+'","'+(v.type||"")+'","'+(v.formatted||"")+'",'+(!w.status?"":w.registered)+',"'+(w.error||"")+'"\n';
+        });
+        var blob=new Blob([csv],{type:"text/csv"});
+        var a=document.createElement("a");a.href=URL.createObjectURL(blob);
+        a.download="phone_results_"+Date.now()+".csv";a.click();
+    });
+}
+
+function loadFiles(){
+    fetch("/api/files").then(function(r){return r.json()}).then(function(f){
+        var el=document.getElementById("filesList");
+        if(!f.length){el.innerHTML='<div class="empty-msg">Нет файлов</div>';return}
+        el.innerHTML='<div style="display:flex;flex-direction:column;gap:4px;">'+f.map(function(x){
+            return'<div style="padding:10px 14px;background:#14141f;border-radius:6px;display:flex;justify-content:space-between;align-items:center;">'+
+                '<span style="color:#e0e0e0;font-size:13px;">'+x.filename+'</span>'+
+                '<span style="font-size:12px;color:#7a8ba8;">'+x.count+' номеров</span>'+
+                '<a class="btn btn-secondary btn-sm" href="/api/files/'+encodeURIComponent(x.filename)+'" download>Скачать</a></div>';
+        }).join("")+"</div>";
+    });
+}
+
+updateStatus();
+if(pollInterval)clearInterval(pollInterval);
+pollInterval=setInterval(updateStatus,5000);
+</script>
+</body>
+</html>

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Уникализатор текстов</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',system-ui,sans-serif;background:#08080d;color:#e0e0e0;min-height:100vh}
+        .header{background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);padding:20px 32px;border-bottom:1px solid #2a4a5f;display:flex;justify-content:space-between;align-items:center}
+        .header h1{font-size:22px;font-weight:600;color:#22d3ee}
+        .header .ver{color:#555;font-size:12px}
+        .container{max-width:1100px;margin:0 auto;padding:20px}
+        .nav{display:flex;gap:4px;background:#10101a;padding:5px;border-radius:10px;margin-bottom:20px;border:1px solid #222}
+        .nav-btn{padding:9px 18px;background:0 0;border:0;color:#7a8ba8;cursor:pointer;border-radius:6px;font-size:13px;transition:.15s}
+        .nav-btn:hover{color:#ccc;background:#1a1a28}
+        .nav-btn.active{background:#22d3ee;color:#000;font-weight:600}
+        .page{display:none}.page.active{display:block}
+        .card{background:#10101a;border:1px solid #222;border-radius:10px;padding:20px;margin-bottom:14px}
+        .card h3{color:#22d3ee;font-size:15px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #1a1a28}
+        label{display:block;color:#7a8ba8;font-size:12px;margin-bottom:5px;margin-top:10px}
+        label:first-child{margin-top:0}
+        input[type="text"],input[type="number"],input[type="password"],select{
+            width:100%;padding:10px 12px;background:#14141f;border:1px solid #2a2a3a;border-radius:7px;color:#fff;font-size:13px;outline:0;transition:.2s}
+        input:focus{border-color:#22d3ee}
+        select{cursor:pointer}
+        textarea{width:100%;padding:10px 12px;background:#14141f;border:1px solid #2a2a3a;border-radius:7px;color:#fff;font-size:13px;outline:0;font-family:inherit;resize:vertical;transition:.2s}
+        textarea:focus{border-color:#22d3ee}
+        .btn{padding:10px 20px;border:0;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;transition:.2s}
+        .btn:disabled{opacity:.4;cursor:not-allowed}
+        .btn-primary{background:linear-gradient(135deg,#22d3ee,#0891b2);color:#fff}
+        .btn-primary:hover:not(:disabled){box-shadow:0 4px 20px rgba(34,211,238,.3)}
+        .btn-danger{background:linear-gradient(135deg,#f87171,#dc2626);color:#fff}
+        .btn-success{background:linear-gradient(135deg,#4ade80,#16a34a);color:#fff}
+        .btn-secondary{background:#222;color:#aaa;border:1px solid #333}
+        .btn-sm{padding:6px 12px;font-size:11px}
+        .row{display:flex;gap:10px}.row>*{flex:1}
+        .progress-box{background:#10101a;border:1px solid #222;border-radius:10px;padding:18px;margin-bottom:14px}
+        .progress-bar-bg{width:100%;height:6px;background:#1a1a28;border-radius:3px;overflow:hidden;margin:10px 0}
+        .progress-bar-fill{height:100%;background:linear-gradient(90deg,#22d3ee,#0891b2);border-radius:3px;transition:width .3s;width:0}
+        .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+        .stat{text-align:center;padding:10px;background:#14141f;border-radius:7px}
+        .stat .num{font-size:24px;font-weight:700;color:#22d3ee}
+        .stat .lbl{font-size:11px;color:#555;margin-top:2px}
+        .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+        .badge-running{background:#1a2a3a;color:#60a5fa}
+        .badge-done{background:#1a3a1a;color:#4ade80}
+        .badge-stopped{background:#3a1a1a;color:#f87171}
+        .empty-msg{color:#444;text-align:center;padding:24px;font-size:13px}
+        .btn-row{display:flex;gap:8px;margin-top:14px}
+        .result-item{padding:10px;background:#14141f;border-radius:6px;margin-bottom:4px;border-left:3px solid #22d3ee;font-size:12px;line-height:1.5}
+        .result-item.err{border-left-color:#f87171}
+        .result-item .idx{color:#22d3ee;font-weight:700;margin-right:8px}
+        .result-item .err-msg{color:#f87171;font-size:11px}
+        .prompt-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+        .prompt-card{padding:14px;background:#14141f;border:2px solid #2a2a3a;border-radius:8px;cursor:pointer;transition:.15s;text-align:center}
+        .prompt-card:hover{border-color:#22d3ee;background:#1a1a28}
+        .prompt-card.active{border-color:#22d3ee;background:#14141f}
+        .prompt-card .title{color:#22d3ee;font-size:13px;font-weight:600;margin-bottom:4px}
+        .prompt-card .desc{color:#555;font-size:11px}
+        .hint{color:#444;font-size:11px;margin-top:3px}
+        .file-drop{border:2px dashed #333;border-radius:8px;padding:16px;text-align:center;cursor:pointer;transition:.2s}
+        .file-drop:hover{border-color:#22d3ee}
+        .file-drop.active{border-color:#22d3ee;background:#14141f}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>&#10024; Уникализатор текстов</h1>
+        <span class="ver">v1.0</span>
+    </div>
+    <div class="container">
+        <div class="nav">
+            <button class="nav-btn active" onclick="showPage('generate',this)">Генерация</button>
+            <button class="nav-btn" onclick="showPage('progress',this)">Прогресс</button>
+            <button class="nav-btn" onclick="showPage('files',this)">Файлы</button>
+            <button class="nav-btn" onclick="showPage('settings',this)">Настройки</button>
+        </div>
+
+        <div class="page active" id="page-generate">
+            <div class="card">
+                <h3>Настройки ИИ</h3>
+                <label>API ключ OpenRouter</label>
+                <input type="password" id="apiKey" placeholder="sk-or-v1-...">
+                <label>Модель</label>
+                <select id="modelSelect"></select>
+                <label>Тип уникализации</label>
+                <div class="prompt-cards">
+                    <div class="prompt-card active" data-type="light" onclick="selectPrompt(this,'light')">
+                        <div class="title">&#9889; Лёгкая</div>
+                        <div class="desc">Минимальные изменения, близко к оригиналу</div>
+                    </div>
+                    <div class="prompt-card" data-type="medium" onclick="selectPrompt(this,'medium')">
+                        <div class="title">&#128736; Средняя</div>
+                        <div class="desc">Хорошая уникализация с сохранением стиля</div>
+                    </div>
+                    <div class="prompt-card" data-type="heavy" onclick="selectPrompt(this,'heavy')">
+                        <div class="title">&#128296; Максимальная</div>
+                        <div class="desc">Полная переработка, максимум уникальности</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Исходный текст</h3>
+                <textarea id="sourceText" rows="8" placeholder="Вставьте текст, который нужно уникализировать..."></textarea>
+                <div class="hint" id="charCount">0 символов</div>
+            </div>
+
+            <div class="card">
+                <h3>Количество вариаций</h3>
+                <div class="row">
+                    <div>
+                        <label>Сколько уникальных версий создать</label>
+                        <input type="number" id="variantCount" value="100" min="1" max="500">
+                    </div>
+                    <div>
+                        <label>Задержка между запросами (сек)</label>
+                        <input type="number" id="genDelay" value="2" min="1" max="30">
+                        <div class="hint">Бесплатные модели могут лимитить</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align:center;padding:4px 0;">
+                <button class="btn btn-primary" onclick="startGenerate()" style="padding:14px 48px;font-size:15px;">&#9654; Начать генерацию</button>
+            </div>
+        </div>
+
+        <div class="page" id="page-progress">
+            <div class="progress-box">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <h3 style="color:#22d3ee;font-size:15px;">Прогресс</h3>
+                    <span class="badge badge-running" id="statusBadge">Ожидание</span>
+                </div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
+                <div class="stats">
+                    <div class="stat"><div class="num" id="statCurrent">0</div><div class="lbl">Текущее</div></div>
+                    <div class="stat"><div class="num" id="statTotal">0</div><div class="lbl">Всего</div></div>
+                    <div class="stat"><div class="num" id="statOk" style="color:#4ade80">0</div><div class="lbl">Готово</div></div>
+                    <div class="stat"><div class="num" id="statErr" style="color:#f87171">0</div><div class="lbl">Ошибки</div></div>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-secondary" onclick="pauseGen()" id="pauseBtn">&#9646;&#9646; Пауза</button>
+                    <button class="btn btn-danger" onclick="stopGen()">&#9632; Стоп</button>
+                    <button class="btn btn-success" onclick="downloadResults()" id="dlBtn" style="display:none;">&#11015; Скачать файл</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Результаты</h3>
+                <div id="resultsList" style="max-height:500px;overflow-y:auto;">
+                    <div class="empty-msg">Ожидание начала...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page" id="page-files">
+            <div class="card">
+                <h3>Готовые файлы</h3>
+                <div id="filesList"><div class="empty-msg">Загрузка...</div></div>
+            </div>
+        </div>
+
+        <div class="page" id="page-settings">
+            <div class="card">
+                <h3>OpenRouter</h3>
+                <label>API ключ</label>
+                <input type="password" id="apiKeySet" placeholder="sk-or-v1-...">
+                <div class="hint">Получите на openrouter.ai → Keys</div>
+                <label>Модель по умолчанию</label>
+                <select id="modelSet"></select>
+                <label>Тип промпта по умолчанию</label>
+                <select id="promptSet">
+                    <option value="light">Лёгкая</option>
+                    <option value="medium" selected>Средняя</option>
+                    <option value="heavy">Максимальная</option>
+                </select>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="saveSettings()">Сохранить</button>
+                    <button class="btn btn-secondary" onclick="testModel()">Тест модели</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+let currentPrompt="medium",pollInterval=null,resultsPoll=null;
+
+document.getElementById("sourceText").addEventListener("input",()=>{
+    document.getElementById("charCount").textContent=document.getElementById("sourceText").value.length+" символов";
+});
+
+function showPage(id,btn){
+    document.querySelectorAll(".page").forEach(p=>p.className="page");
+    document.querySelectorAll(".nav-btn").forEach(b=>b.className="nav-btn");
+    document.getElementById("page-"+id).className="page active";
+    if(btn)btn.className="nav-btn active";
+    if(id==="progress"){startPolling();startResultsPoll()}
+    if(id==="files")loadFiles();
+}
+
+function selectPrompt(el,type){
+    document.querySelectorAll(".prompt-card").forEach(c=>c.classList.remove("active"));
+    el.classList.add("active");
+    currentPrompt=type;
+}
+
+async function startGenerate(){
+    const text=document.getElementById("sourceText").value.trim();
+    const count=parseInt(document.getElementById("variantCount").value)||100;
+    const apiKey=document.getElementById("apiKey").value.trim();
+    const model=document.getElementById("modelSelect").value;
+    const delay=parseInt(document.getElementById("genDelay").value)||2;
+
+    if(!apiKey)return alert("Введите API ключ");
+    if(!text)return alert("Введите текст для уникализации");
+
+    if(confirm(`Создать ${count} уникальных версий? Это может занять ${Math.ceil(count*(delay+3)/60)} минут.`)){
+        const r=await fetch("/api/generate",{method:"POST",headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({text,count,api_key:apiKey,model,prompt_type:currentPrompt,delay})});
+        const d=await r.json();
+        if(d.error)return alert(d.error);
+        showPage("progress",document.querySelectorAll(".nav-btn")[1]);
+    }
+}
+
+function startPolling(){if(pollInterval)clearInterval(pollInterval);pollInterval=setInterval(pollStatus,2000)}
+function startResultsPoll(){if(resultsPoll)clearInterval(resultsPoll);resultsPoll=setInterval(pollResults,3000)}
+
+async function pollStatus(){
+    const r=await fetch("/api/status");const s=await r.json();
+    document.getElementById("statCurrent").textContent=s.current||0;
+    document.getElementById("statTotal").textContent=s.total||0;
+    document.getElementById("statOk").textContent=s.generated||0;
+    document.getElementById("statErr").textContent=s.errors||0;
+    document.getElementById("progressBar").style.width=(s.total?(s.current/s.total*100):0)+"%";
+    const badge=document.getElementById("statusBadge");
+    const labels={idle:"Ожидание",running:"Генерация",paused:"Пауза",done:"Готово",stopped:"Остановлено"};
+    badge.textContent=labels[s.status]||s.status;
+    badge.className="badge badge-"+(s.status==="running"?"running":s.status==="done"?"done":s.status==="paused"?"paused":"stopped");
+    document.getElementById("pauseBtn").innerHTML=s.status==="paused"?"&#9654; Продолжить":"&#9646;&#9646; Пауза";
+    document.getElementById("dlBtn").style.display=s.status==="done"?"inline-block":"none";
+}
+
+async function pollResults(){
+    const r=await fetch("/api/results");const data=await r.json();
+    const el=document.getElementById("resultsList");
+    if(!data.length){el.innerHTML='<div class="empty-msg">Ожидание...</div>';return}
+    el.innerHTML=data.slice(-50).reverse().map(r=>{
+        if(r.status==="ok")return`<div class="result-item"><span class="idx">#${r.index}</span>${esc(r.text)}</div>`;
+        return`<div class="result-item err"><span class="idx">#${r.index}</span><span class="err-msg">${r.error||"Ошибка"}</span></div>`;
+    }).join("");
+}
+
+async function pauseGen(){await fetch("/api/pause",{method:"POST"})}
+async function stopGen(){if(confirm("Остановить генерацию?"))await fetch("/api/stop",{method:"POST"})}
+async function downloadResults(){window.location="/api/download-latest"}
+
+async function loadFiles(){
+    const r=await fetch("/api/files");const f=await r.json();
+    const el=document.getElementById("filesList");
+    if(!f.length){el.innerHTML='<div class="empty-msg">Нет файлов</div>';return}
+    el.innerHTML='<div style="display:flex;flex-direction:column;gap:4px;">'+f.map(x=>
+        `<div style="padding:10px 14px;background:#14141f;border-radius:6px;display:flex;justify-content:space-between;align-items:center;">
+            <span style="color:#e0e0e0;font-size:13px;">${x.filename}</span>
+            <span style="color:#22d3ee;font-size:12px;">${x.variants} вариантов</span>
+            <a class="btn btn-secondary btn-sm" href="/api/download/${encodeURIComponent(x.filename)}" download>Скачать</a>
+        </div>`
+    ).join("")+"</div>";
+}
+
+async function saveSettings(){
+    const d={api_key:document.getElementById("apiKeySet").value,model:document.getElementById("modelSet").value,prompt_type:document.getElementById("promptSet").value};
+    await fetch("/api/config",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)});
+    alert("Сохранено");
+}
+async function testModel(){
+    const btn=event.target;btn.disabled=true;btn.textContent="Проверка...";
+    await saveSettings();
+    const r=await fetch("/api/test-model",{method:"POST"});const d=await r.json();
+    alert(d.ok?`Модель: ${d.model}\n${d.response}`:d.error);
+    btn.disabled=false;btn.textContent="Тест модели";
+}
+
+async function loadConfig(){
+    const r=await fetch("/api/config");const c=await r.json();
+    document.getElementById("apiKey").value=c.api_key||"";
+    document.getElementById("apiKeySet").value=c.api_key||"";
+    const models=c.models||[];
+    const sel=document.getElementById("modelSelect");
+    const sel2=document.getElementById("modelSet");
+    sel.innerHTML="";sel2.innerHTML="";
+    models.forEach(m=>{
+        sel.innerHTML+=`<option value="${m}"${m===c.model?" selected":""}>${m}</option>`;
+        sel2.innerHTML+=`<option value="${m}"${m===c.model?" selected":""}>${m}</option>`;
+    });
+    document.getElementById("promptSet").value=c.prompt_type||"medium";
+}
+
+function esc(s){const d=document.createElement("div");d.textContent=s||"";return d.innerHTML}
+
+loadConfig();
+</script>
+</body>
+</html>

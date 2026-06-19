@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Рассыльщик почты v2</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#08080d;color:#e0e0e0;min-height:100vh}
+        .header{background:linear-gradient(135deg,#1a1a2e 0%,#1a1040 50%,#2d1b4e 100%);padding:20px 32px;border-bottom:1px solid #3a2a5f;display:flex;justify-content:space-between;align-items:center}
+        .header h1{font-size:22px;font-weight:600;color:#c084fc}
+        .header .ver{color:#555;font-size:12px}
+        .container{max-width:1200px;margin:0 auto;padding:20px}
+        .nav{display:flex;gap:4px;background:#10101a;padding:5px;border-radius:10px;margin-bottom:20px;border:1px solid #222}
+        .nav-btn{padding:9px 18px;background:0 0;border:0;color:#7a8ba8;cursor:pointer;border-radius:6px;font-size:13px;transition:.15s}
+        .nav-btn:hover{color:#ccc;background:#1a1a28}
+        .nav-btn.active{background:#c084fc;color:#000;font-weight:600}
+        .page{display:none}.page.active{display:block}
+        .card{background:#10101a;border:1px solid #222;border-radius:10px;padding:20px;margin-bottom:14px}
+        .card h3{color:#c084fc;font-size:15px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #1a1a28}
+        label{display:block;color:#7a8ba8;font-size:12px;margin-bottom:5px;margin-top:10px}
+        label:first-child{margin-top:0}
+        input[type="text"],input[type="number"],input[type="password"],input[type="datetime-local"],select{
+            width:100%;padding:10px 12px;background:#14141f;border:1px solid #2a2a3a;border-radius:7px;color:#fff;font-size:13px;outline:0;transition:.2s}
+        input:focus{border-color:#c084fc}
+        textarea{width:100%;padding:10px 12px;background:#14141f;border:1px solid #2a2a3a;border-radius:7px;color:#fff;font-size:13px;outline:0;font-family:inherit;resize:vertical;transition:.2s}
+        textarea:focus{border-color:#c084fc}
+        .row{display:flex;gap:10px}.row>*{flex:1}
+        .row3{display:flex;gap:10px}.row3>*{flex:1}
+        .btn{padding:10px 20px;border:0;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;transition:.2s}
+        .btn:disabled{opacity:.4;cursor:not-allowed}
+        .btn-primary{background:linear-gradient(135deg,#c084fc,#9333ea);color:#fff}
+        .btn-primary:hover:not(:disabled){box-shadow:0 4px 20px rgba(192,132,252,.3)}
+        .btn-danger{background:linear-gradient(135deg,#f87171,#dc2626);color:#fff}
+        .btn-success{background:linear-gradient(135deg,#4ade80,#16a34a);color:#fff}
+        .btn-secondary{background:#222;color:#aaa;border:1px solid #333}
+        .btn-sm{padding:6px 12px;font-size:11px}
+        .progress-box{background:#10101a;border:1px solid #222;border-radius:10px;padding:18px;margin-bottom:14px}
+        .progress-bar-bg{width:100%;height:6px;background:#1a1a28;border-radius:3px;overflow:hidden;margin:10px 0}
+        .progress-bar-fill{height:100%;background:linear-gradient(90deg,#c084fc,#9333ea);border-radius:3px;transition:width .3s;width:0}
+        .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+        .stat{text-align:center;padding:10px 6px;background:#14141f;border-radius:7px}
+        .stat .num{font-size:24px;font-weight:700;color:#c084fc}
+        .stat .lbl{font-size:11px;color:#555;margin-top:2px}
+        .email-area{width:100%;min-height:120px;padding:10px 12px;background:#14141f;border:1px solid #2a2a3a;border-radius:7px;color:#fff;font-size:12px;font-family:'Cascadia Code','Fira Code',monospace;outline:0;resize:vertical}
+        .email-area:focus{border-color:#c084fc}
+        .hint{color:#444;font-size:11px;margin-top:3px}
+        .toggle-row{display:flex;align-items:center;gap:8px;margin-top:10px}
+        .toggle{position:relative;width:40px;height:22px;background:#2a2a3a;border-radius:11px;cursor:pointer;transition:.2s}
+        .toggle.on{background:#c084fc}
+        .toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:.2s}
+        .toggle.on::after{transform:translateX(18px)}
+        .log-item{padding:8px 12px;background:#14141f;border-radius:5px;display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;font-size:12px}
+        .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+        .badge-running{background:#1a2a3a;color:#60a5fa}
+        .badge-done{background:#1a3a1a;color:#4ade80}
+        .badge-stopped{background:#3a1a1a;color:#f87171}
+        .badge-paused{background:#3a3a1a;color:#facc15}
+        .empty-msg{color:#444;text-align:center;padding:24px;font-size:13px}
+        .btn-row{display:flex;gap:8px;margin-top:14px}
+        .preview-box{background:#fff;border-radius:7px;padding:14px;color:#000;max-height:250px;overflow-y:auto;margin-top:8px;font-size:13px}
+        .template-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:10px}
+        .template-card{padding:12px;background:#14141f;border:1px solid #2a2a3a;border-radius:7px;cursor:pointer;transition:.15s;text-align:center}
+        .template-card:hover{border-color:#c084fc;background:#1a1a28}
+        .template-card .icon{font-size:24px;margin-bottom:6px}
+        .template-card .name{font-size:12px;color:#aaa}
+        .count-badge{background:#c084fc;color:#000;padding:1px 8px;border-radius:10px;font-size:11px;font-weight:700;margin-left:8px}
+        .live-entry{padding:5px 10px;font-size:11px;font-family:'Cascadia Code',monospace;border-bottom:1px solid #14141f;display:flex;justify-content:space-between}
+        .live-entry .ok{color:#4ade80}.live-entry .err{color:#f87171}.live-entry .skip{color:#facc15}
+        .file-drop{border:2px dashed #333;border-radius:8px;padding:20px;text-align:center;cursor:pointer;transition:.2s;margin-top:8px}
+        .file-drop:hover{border-color:#c084fc;background:#14141f}
+        .file-drop.active{border-color:#c084fc;background:#14141f}
+        .countdown{font-size:14px;color:#c084fc;font-weight:600;text-align:center;padding:8px}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>&#9993; Рассыльщик почты</h1>
+        <span class="ver">v2.0</span>
+    </div>
+    <div class="container">
+        <div class="nav">
+            <button class="nav-btn active" onclick="showPage('compose',this)">Создать</button>
+            <button class="nav-btn" onclick="showPage('sending',this)">Прогресс</button>
+            <button class="nav-btn" onclick="showPage('settings',this)">Настройки</button>
+            <button class="nav-btn" onclick="showPage('logs',this)">Логи</button>
+        </div>
+
+        <div class="page active" id="page-compose">
+            <div class="card">
+                <h3>Получатели <span class="count-badge" id="emailCount">0</span></h3>
+                <div class="row">
+                    <div style="flex:2;">
+                        <textarea class="email-area" id="emailList" rows="5" placeholder="one@email.com&#10;two@email.com&#10;&#10;Или через запятую: a@x.com, b@x.com"></textarea>
+                    </div>
+                    <div style="flex:1;">
+                        <div class="file-drop" id="fileDrop" onclick="document.getElementById('fileInput').click()">
+                            <div style="color:#555;font-size:12px;">Нажмите или перетащите файл</div>
+                            <div style="color:#333;font-size:11px;margin-top:4px;">CSV, TXT</div>
+                        </div>
+                        <input type="file" id="fileInput" accept=".csv,.txt" style="display:none" onchange="handleFile(this)">
+                    </div>
+                </div>
+                <div class="hint">Строки с # игнорируются. Дубликаты автоматически удаляются.</div>
+            </div>
+
+            <div class="card">
+                <h3>Шаблоны</h3>
+                <div class="template-grid">
+                    <div class="template-card" onclick="applyTemplate('promo')"><div class="icon">&#127381;</div><div class="name">Промо</div></div>
+                    <div class="template-card" onclick="applyTemplate('newsletter')"><div class="icon">&#128240;</div><div class="name">Рассылка</div></div>
+                    <div class="template-card" onclick="applyTemplate('invite')"><div class="icon">&#127873;</div><div class="name">Приглашение</div></div>
+                    <div class="template-card" onclick="applyTemplate('followup')"><div class="icon">&#128172;</div><div class="name">Фолловап</div></div>
+                    <div class="template-card" onclick="applyTemplate('blank')"><div class="icon">&#9998;</div><div class="name">Пустой</div></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Письмо</h3>
+                <label>Отправитель (имя)</label>
+                <input type="text" id="fromName" placeholder="Моё имя">
+                <label>Ответ (Reply-To)</label>
+                <input type="text" id="replyTo" placeholder="reply@example.com (необязательно)">
+                <label>Тема письма</label>
+                <input type="text" id="subject" placeholder="Введите тему">
+                <div class="toggle-row">
+                    <div class="toggle" id="htmlToggle" onclick="toggleHtml()"></div>
+                    <span style="font-size:12px;">HTML-формат</span>
+                    <button class="btn btn-secondary btn-sm" id="previewBtn" onclick="previewEmail()" style="display:none;margin-left:8px;">Предпросмотр</button>
+                </div>
+                <label>Текст письма</label>
+                <textarea id="emailBody" rows="8" placeholder="Введите текст письма..."></textarea>
+                <div id="previewBox" style="display:none;"></div>
+            </div>
+
+            <div class="card">
+                <h3>Настройки отправки</h3>
+                <div class="row3">
+                    <div>
+                        <label>Мин. задержка (сек)</label>
+                        <input type="number" id="delayMin" value="90" min="10" max="3600">
+                    </div>
+                    <div>
+                        <label>Макс. задержка (сек)</label>
+                        <input type="number" id="delayMax" value="150" min="10" max="3600">
+                    </div>
+                    <div>
+                        <label>Отложить старт</label>
+                        <input type="datetime-local" id="startAt">
+                        <div class="hint">Оставьте пустым для немедленного старта</div>
+                    </div>
+                </div>
+
+                <div class="toggle-row" style="margin-top:14px;padding:12px;background:#14141f;border-radius:7px;border:1px solid #2a2a3a;">
+                    <div class="toggle" id="uniqueToggle" onclick="toggleUnique()"></div>
+                    <div>
+                        <span style="font-size:12px;font-weight:600;">Уникальные письма из уникализатора</span>
+                        <div class="hint">Каждому получателю — уникальный текст (сервер :5557)</div>
+                    </div>
+                    <span class="count-badge" id="variantsCount" style="margin-left:auto;">0</span>
+                </div>
+
+                <div class="hint" style="margin-top:8px;">Задержка выбирается случайно в указанном диапазоне. Рекомендуется 60-180 сек.</div>
+            </div>
+
+            <div style="text-align:center;padding:4px 0;">
+                <button class="btn btn-primary" onclick="startSend()" style="padding:14px 48px;font-size:15px;">&#9654; Начать рассылку</button>
+            </div>
+        </div>
+
+        <div class="page" id="page-sending">
+            <div class="progress-box">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <h3 style="color:#c084fc;font-size:15px;">Прогресс</h3>
+                    <span class="badge badge-running" id="statusBadge">Ожидание</span>
+                </div>
+                <div class="countdown" id="countdown"></div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
+                <div class="stats">
+                    <div class="stat"><div class="num" id="statCurrent">0</div><div class="lbl">Текущее</div></div>
+                    <div class="stat"><div class="num" id="statTotal">0</div><div class="lbl">Всего</div></div>
+                    <div class="stat"><div class="num" id="statSent" style="color:#4ade80">0</div><div class="lbl">Отправлено</div></div>
+                    <div class="stat"><div class="num" id="statFailed" style="color:#f87171">0</div><div class="lbl">Ошибки</div></div>
+                    <div class="stat"><div class="num" id="statSkipped" style="color:#facc15">0</div><div class="lbl">Пропущено</div></div>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-secondary" onclick="pauseSend()" id="pauseBtn">&#9646;&#9646; Пауза</button>
+                    <button class="btn btn-danger" onclick="stopSend()">&#9632; Стоп</button>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Лог в реальном времени</h3>
+                <div id="liveLog" style="max-height:350px;overflow-y:auto;">
+                    <div class="empty-msg">Ожидание начала...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page" id="page-settings">
+            <div class="card">
+                <h3>SMTP (Outlook)</h3>
+                <div class="row">
+                    <div><label>Сервер</label><input type="text" id="smtpHost" value="smtp-mail.outlook.com"></div>
+                    <div><label>Порт</label><input type="number" id="smtpPort" value="587"></div>
+                </div>
+                <label>Email отправителя</label>
+                <input type="text" id="smtpUser" placeholder="your@outlook.com">
+                <label>Пароль приложения</label>
+                <input type="password" id="smtpPass" placeholder="Пароль приложения Outlook">
+                <div class="hint">Outlook → Безопасность → Пароли приложений → Создать</div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="saveSettings()">Сохранить</button>
+                    <button class="btn btn-secondary" onclick="testConn()">Тест подключения</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="page" id="page-logs">
+            <div class="card">
+                <h3>История рассылок</h3>
+                <div id="logsList"><div class="empty-msg">Загрузка...</div></div>
+            </div>
+            <div class="card" id="logDetail" style="display:none">
+                <h3 id="logDetailTitle">Детали</h3>
+                <div id="logDetailContent" style="max-height:400px;overflow-y:auto;"></div>
+            </div>
+        </div>
+    </div>
+
+<script>
+let isHtml=false,pollInterval=null,logPollInterval=null,useUnique=false,variantsAvailable=0;
+
+document.getElementById("emailList").addEventListener("input",updateCount);
+const fd=document.getElementById("fileDrop");
+fd.addEventListener("dragover",e=>{e.preventDefault();fd.classList.add("active")});
+fd.addEventListener("dragleave",()=>fd.classList.remove("active"));
+fd.addEventListener("drop",e=>{e.preventDefault();fd.classList.remove("active");if(e.dataTransfer.files.length)uploadFile(e.dataTransfer.files[0])});
+
+function updateCount(){
+    const n=parseEmails(document.getElementById("emailList").value).length;
+    document.getElementById("emailCount").textContent=n;
+}
+function parseEmails(t){
+    const raw=[];
+    t.split("\n").forEach(l=>{
+        l=l.trim();
+        if(!l||l.startsWith("#"))return;
+        if(l.includes(",")||l.includes(";")){l.split(/[,;]/).forEach(p=>{p=p.trim();if(p.includes("@"))raw.push(p)});return}
+        if(l.includes("@"))raw.push(l);
+    });
+    const s=new Set();
+    const re=/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+    return[...new Set(raw.map(e=>e.toLowerCase().trim()).filter(e=>re.test(e)))];
+}
+async function handleFile(inp){if(inp.files.length)await uploadFile(inp.files[0])}
+async function uploadFile(file){
+    const fd=new FormData();fd.append("file",file);
+    const r=await fetch("/api/upload",{method:"POST",body:fd});
+    const d=await r.json();
+    if(d.emails&&d.emails.length){
+        const existing=document.getElementById("emailList").value.trim();
+        const all=existing?existing+"\n"+d.emails.join("\n"):d.emails.join("\n");
+        document.getElementById("emailList").value=all;
+        updateCount();
+    }
+}
+
+function showPage(id,btn){
+    document.querySelectorAll(".page").forEach(p=>p.className="page");
+    document.querySelectorAll(".nav-btn").forEach(b=>b.className="nav-btn");
+    document.getElementById("page-"+id).className="page active";
+    if(btn)btn.className="nav-btn active";
+    if(id==="sending"){startPolling();startLogPolling()}
+    else{stopLogPolling()}
+    if(id==="logs")loadLogs();
+}
+
+function toggleHtml(){
+    isHtml=!isHtml;
+    document.getElementById("htmlToggle").className=isHtml?"toggle on":"toggle";
+    document.getElementById("previewBtn").style.display=isHtml?"inline-block":"none";
+    document.getElementById("previewBox").style.display="none";
+}
+function previewEmail(){
+    const b=document.getElementById("emailBody").value;
+    const box=document.getElementById("previewBox");
+    box.className="preview-box";box.innerHTML=b;box.style.display="block";
+}
+
+const templates={
+    promo:{subject:"Специальное предложение только для вас!",body:"<h2>Специальное предложение!</h2>\n<p>Мы подготовили для вас уникальную скидку.</p>\n<p>Используйте промокод <b>SPECIAL20</b> и получите скидку 20%.</p>\n<p>Предложение действительно до конца недели!</p>"},
+    newsletter:{subject:"Новости и обновления",body:"<h2>Последние новости</h2>\n<ul>\n<li>Новый функционал запущен</li>\n<li>Обновление интерфейса</li>\n<li>Улучшение производительности</li>\n</ul>\n<p>Следите за обновлениями!</p>"},
+    invite:{subject:"Приглашаю вас присоединиться",body:"<h2>Вы приглашены!</h2>\n<p>Мне было бы приятно, если бы вы присоединились к нашему сообществу.</p>\n<p>Перейдите по ссылке для регистрации.</p>"},
+    followup:{subject:"Ещё раз привет!",body:"Привет!\n\nХотел напомнить о нашем предыдущем разговоре.\n\nБуду рад, если вы найдёте время ответить.\n\nС уважением"},
+    blank:{subject:"",body:""}
+};
+function applyTemplate(name){
+    const t=templates[name];
+    document.getElementById("subject").value=t.subject;
+    document.getElementById("emailBody").value=t.body;
+}
+
+function toggleUnique(){
+    useUnique=!useUnique;
+    document.getElementById("uniqueToggle").className=useUnique?"toggle on":"toggle";
+    document.getElementById("emailBody").placeholder=useUnique?"Текст будет подставлен из уникализатора...":"Введите текст письма...";
+}
+
+async function checkVariants(){
+    try{
+        const r=await fetch("http://localhost:5557/api/files");
+        const f=await r.json();
+        if(f.length){
+            variantsAvailable=f[0].variants;
+            document.getElementById("variantsCount").textContent=f[0].variants+" вариантов";
+        }else{
+            variantsAvailable=0;
+            document.getElementById("variantsCount").textContent="0";
+        }
+    }catch(e){
+        variantsAvailable=0;
+        document.getElementById("variantsCount").textContent="—";
+    }
+}
+
+async function startSend(){
+    const emails=parseEmails(document.getElementById("emailList").value);
+    const subject=document.getElementById("subject").value.trim();
+    const body=document.getElementById("emailBody").value;
+    const delayMin=parseInt(document.getElementById("delayMin").value)||90;
+    const delayMax=parseInt(document.getElementById("delayMax").value)||150;
+    const startAt=document.getElementById("startAt").value;
+    const fromName=document.getElementById("fromName").value.trim();
+    const replyTo=document.getElementById("replyTo").value.trim();
+
+    if(!emails.length)return alert("Добавьте email адреса");
+    if(!subject)return alert("Введите тему письма");
+    if(!body.trim()&&!useUnique)return alert("Введите текст письма или включите уникальные письма");
+    if(delayMin>delayMax)return alert("Мин. задержка не может быть больше макс.");
+    if(useUnique&&emails.length>variantsAvailable){
+        if(!confirm("Получателей больше, чем вариантов. лишние получат базовый текст. Продолжить?"))return;
+    }
+
+    const r=await fetch("/api/send",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({emails:emails.join("\n"),subject,body,is_html:isHtml,delay_min:delayMin,delay_max:delayMax,start_at:startAt,from_name:fromName,reply_to:replyTo,use_variants:useUnique})});
+    const d=await r.json();
+    if(d.error)return alert(d.error);
+
+    showPage("sending",document.querySelectorAll(".nav-btn")[1]);
+}
+
+function startPolling(){if(pollInterval)clearInterval(pollInterval);pollInterval=setInterval(pollStatus,1500)}
+function startLogPolling(){if(logPollInterval)clearInterval(logPollInterval);logPollInterval=setInterval(pollLiveLog,2000)}
+function stopLogPolling(){if(logPollInterval){clearInterval(logPollInterval);logPollInterval=null}}
+
+async function pollStatus(){
+    const r=await fetch("/api/status");const s=await r.json();
+    document.getElementById("statCurrent").textContent=s.current||0;
+    document.getElementById("statTotal").textContent=s.total||0;
+    document.getElementById("statSent").textContent=s.sent||0;
+    document.getElementById("statFailed").textContent=s.failed||0;
+    document.getElementById("statSkipped").textContent=s.skipped||0;
+    document.getElementById("progressBar").style.width=(s.total?(s.current/s.total*100):0)+"%";
+    const badge=document.getElementById("statusBadge");
+    const labels={idle:"Ожидание",running:"Отправка",paused:"Пауза",done:"Завершено",stopped:"Остановлено"};
+    const st=s.status||"idle";
+    badge.textContent=labels[st]||st;
+    badge.className="badge badge-"+(st==="running"?"running":st==="done"?"done":st==="paused"?"paused":"stopped");
+    document.getElementById("pauseBtn").innerHTML=st==="paused"?"&#9654; Продолжить":"&#9646;&#9646; Пауза";
+    document.getElementById("countdown").textContent=s.next_in?`Следующее письмо через ${s.next_in}с`:"";
+}
+async function pollLiveLog(){
+    const r=await fetch("/api/live-log");const entries=await r.json();
+    const el=document.getElementById("liveLog");
+    if(!entries.length){el.innerHTML='<div class="empty-msg">Ожидание...</div>';return}
+    el.innerHTML=entries.slice(-30).reverse().map(e=>{
+        const cls=e.status==="ok"?"ok":e.status==="error"?"err":"skip";
+        const info=e.status==="ok"?"OK":e.error||e.reason||"—";
+        return`<div class="live-entry"><span>${e.email}</span><span class="${cls}">${info}</span><span style="color:#333">${e.time?e.time.split("T")[1].slice(0,8):""}</span></div>`;
+    }).join("");
+}
+
+async function pauseSend(){await fetch("/api/pause",{method:"POST"})}
+async function stopSend(){if(confirm("Остановить рассылку?"))await fetch("/api/stop",{method:"POST"})}
+
+async function saveSettings(){
+    const d={smtp_host:document.getElementById("smtpHost").value,smtp_port:parseInt(document.getElementById("smtpPort").value),
+        smtp_user:document.getElementById("smtpUser").value,smtp_pass:document.getElementById("smtpPass").value};
+    const r=await fetch("/api/config",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)});
+    const res=await r.json();alert(res.ok?"Сохранено":"Ошибка");
+}
+async function testConn(){
+    const btn=event.target;btn.disabled=true;btn.textContent="Проверка...";
+    await saveSettings();
+    const r=await fetch("/api/test",{method:"POST"});const d=await r.json();
+    alert(d.message||d.error);btn.disabled=false;btn.textContent="Тест подключения";
+}
+async function loadSettings(){
+    const r=await fetch("/api/config");const c=await r.json();
+    document.getElementById("smtpHost").value=c.smtp_host||"";
+    document.getElementById("smtpPort").value=c.smtp_port||587;
+    document.getElementById("smtpUser").value=c.smtp_user||"";
+    document.getElementById("smtpPass").value=c.smtp_pass||"";
+    document.getElementById("fromName").value=c.from_name||"";
+    document.getElementById("replyTo").value=c.reply_to||"";
+}
+async function loadLogs(){
+    const r=await fetch("/api/logs");const f=await r.json();
+    const el=document.getElementById("logsList");
+    if(!f.length){el.innerHTML='<div class="empty-msg">Нет логов</div>';return}
+    el.innerHTML='<div style="display:flex;flex-direction:column;gap:3px;">'+f.map(x=>
+        `<div class="log-item"><span style="color:#e0e0e0">${x.filename}</span><span style="color:#c084fc">${x.entries} писем</span><button class="btn btn-secondary btn-sm" onclick="showLog('${x.filename}')">Просмотр</button></div>`
+    ).join("")+"</div>";
+}
+async function showLog(fn){
+    const r=await fetch("/api/log/"+fn);const e=await r.json();
+    document.getElementById("logDetailTitle").textContent="Детали: "+fn;
+    document.getElementById("logDetailContent").innerHTML=e.map(x=>{
+        const cls=x.status==="ok"?"ok":x.status==="error"?"err":"skip";
+        const info=x.status==="ok"?"OK":x.error||x.reason||"—";
+        return`<div class="log-item"><span style="flex:1;color:#e0e0e0">${x.email}</span><span style="color:${cls==="ok"?"#4ade80":cls==="err"?"#f87171":"#facc15"}">${info}</span><span style="color:#333;font-size:11px">${x.time||""}</span></div>`;
+    }).join("");
+    document.getElementById("logDetail").style.display="block";
+}
+
+loadSettings();
+checkVariants();
+setInterval(checkVariants,30000);
+</script>
+</body>
+</html>

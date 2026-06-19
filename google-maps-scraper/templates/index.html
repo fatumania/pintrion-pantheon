@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Maps Scraper v5</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',system-ui,sans-serif;background:#08080d;color:#e0e0e0;min-height:100vh}
+        .header{background:linear-gradient(135deg,#1a3a1a,#0f2a1f,#1a2a3a);padding:16px 32px;border-bottom:1px solid #2a5a3f;display:flex;justify-content:space-between;align-items:center}
+        .header h1{font-size:20px;font-weight:600;color:#4ade80}
+        .header-right{display:flex;gap:8px;align-items:center}
+        .badge-count{background:#1a3a1a;color:#4ade80;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600;border:1px solid #2a5a3f}
+
+        .tab-bar{display:flex;gap:2px;background:#0a0a12;padding:6px 10px 0;border-bottom:1px solid #1a1a28;overflow-x:auto;min-height:42px}
+        .tab{padding:8px 16px;background:#12121e;border:1px solid #222;border-bottom:none;border-radius:8px 8px 0 0;font-size:12px;color:#7a8ba8;cursor:pointer;display:flex;align-items:center;gap:8px;white-space:nowrap;transition:.15s;position:relative}
+        .tab:hover{color:#ccc;background:#1a1a28}
+        .tab.active{background:#10101a;color:#4ade80;border-color:#4ade80;font-weight:600}
+        .tab .status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+        .tab .status-dot.idle{background:#555}
+        .tab .status-dot.running{background:#60a5fa;animation:pulse 1s infinite}
+        .tab .status-dot.done{background:#4ade80}
+        .tab .close-tab{opacity:0;transition:.15s;font-size:14px;color:#555;cursor:pointer;padding:0 2px}
+        .tab:hover .close-tab{opacity:1}
+        .tab .close-tab:hover{color:#f87171}
+        .tab-add{padding:8px 14px;background:0 0;border:1px dashed #333;border-bottom:none;border-radius:8px 8px 0 0;color:#555;cursor:pointer;font-size:16px;transition:.15s}
+        .tab-add:hover{border-color:#4ade80;color:#4ade80;background:#1a1a28}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+        .main{max-width:1400px;margin:0 auto;padding:20px}
+
+        .session-panel{display:none}
+        .session-panel.active{display:block}
+
+        .page-tabs{display:flex;gap:4px;background:#10101a;padding:5px;border-radius:10px;margin-bottom:20px;border:1px solid #222}
+        .page-tab{padding:9px 18px;background:0 0;border:0;color:#7a8ba8;cursor:pointer;border-radius:6px;font-size:13px;transition:.15s}
+        .page-tab:hover{color:#ccc;background:#1a1a28}
+        .page-tab.active{background:#4ade80;color:#000;font-weight:600}
+
+        .page-section{display:none}
+        .page-section.active{display:block}
+
+        .card{background:#10101a;border:1px solid #222;border-radius:10px;padding:20px;margin-bottom:14px}
+        .card h3{color:#4ade80;font-size:15px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #1a1a28}
+        label{display:block;color:#7a8ba8;font-size:12px;margin-bottom:5px;margin-top:10px}
+        label:first-child{margin-top:0}
+        input[type="text"],input[type="number"],select{width:100%;padding:10px 12px;background:#14141f;border:1px solid #2a2a3a;border-radius:7px;color:#fff;font-size:13px;outline:0;transition:.2s}
+        input:focus,select:focus{border-color:#4ade80}
+        .btn{padding:10px 20px;border:0;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;transition:.2s}
+        .btn:disabled{opacity:.4;cursor:not-allowed}
+        .btn-primary{background:linear-gradient(135deg,#4ade80,#16a34a);color:#fff}
+        .btn-primary:hover:not(:disabled){box-shadow:0 4px 20px rgba(74,222,128,.3)}
+        .btn-success{background:linear-gradient(135deg,#4ade80,#16a34a);color:#fff}
+        .btn-danger{background:linear-gradient(135deg,#f87171,#dc2626);color:#fff}
+        .btn-secondary{background:#222;color:#aaa;border:1px solid #333}
+        .btn-sm{padding:6px 12px;font-size:11px}
+        .row{display:flex;gap:10px}.row>*{flex:1}
+        .progress-box{background:#10101a;border:1px solid #222;border-radius:10px;padding:18px;margin-bottom:14px}
+        .progress-bar-bg{width:100%;height:6px;background:#1a1a28;border-radius:3px;overflow:hidden;margin:10px 0}
+        .progress-bar-fill{height:100%;background:linear-gradient(90deg,#4ade80,#16a34a);border-radius:3px;transition:width .3s;width:0}
+        .progress-bar-fill.email{background:linear-gradient(90deg,#facc15,#f59e0b)}
+        .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+        .stat{text-align:center;padding:10px;background:#14141f;border-radius:7px}
+        .stat .num{font-size:24px;font-weight:700;color:#4ade80}
+        .stat .lbl{font-size:11px;color:#555;margin-top:2px}
+        .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+        .badge-running{background:#1a2a3a;color:#60a5fa}
+        .badge-done{background:#1a3a1a;color:#4ade80}
+        .badge-email{background:#3a3a1a;color:#facc15}
+        .empty-msg{color:#444;text-align:center;padding:24px;font-size:13px}
+        .btn-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+        .hint{color:#444;font-size:11px;margin-top:3px}
+        .result-table{width:100%;border-collapse:collapse;font-size:11px}
+        .result-table th{text-align:left;padding:6px 8px;background:#14141f;color:#4ade80;border-bottom:1px solid #222;position:sticky;top:0;z-index:1}
+        .result-table td{padding:5px 8px;border-bottom:1px solid #1a1a28;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .result-table tr:hover td{background:#14141f}
+        .result-table a{color:#4ade80;text-decoration:none}
+        .result-table a:hover{text-decoration:underline}
+        .table-wrap{max-height:55vh;overflow:auto;border-radius:8px;border:1px solid #222}
+        .log-entry{padding:3px 10px;font-size:11px;color:#555;border-bottom:1px solid #14141f}
+        .count-badge{background:#4ade80;color:#000;padding:1px 8px;border-radius:10px;font-size:11px;font-weight:700;margin-left:8px}
+        .toggle-row{display:flex;align-items:center;gap:8px;margin-top:10px}
+        .toggle{position:relative;width:40px;height:22px;background:#2a2a3a;border-radius:11px;cursor:pointer;transition:.2s}
+        .toggle.on{background:#4ade80}
+        .toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:.2s}
+        .toggle.on::after{transform:translateX(18px)}
+        .emails{color:#facc15;font-size:10px}
+        .domain{color:#60a5fa;font-size:10px}
+        .phase-label{font-size:11px;color:#7a8ba8;margin-bottom:4px}
+        .mode-toggle{display:flex;gap:0;background:#14141f;border-radius:8px;border:1px solid #222;overflow:hidden;margin-bottom:16px}
+        .mode-btn{flex:1;padding:12px;background:0 0;border:0;color:#7a8ba8;cursor:pointer;font-size:13px;font-weight:600;transition:.15s;text-align:center}
+        .mode-btn:hover{background:#1a1a28}
+        .mode-btn.active{background:#4ade80;color:#000}
+        .radius-row{display:none;align-items:center;gap:10px;margin-top:12px;padding:12px;background:#14141f;border-radius:8px;border:1px solid #222}
+        .radius-row.visible{display:flex}
+        .radius-row label{margin:0;white-space:nowrap}
+        .radius-row input{width:100px}
+        .radius-row span{color:#555;font-size:12px}
+        .mode-desc{font-size:11px;color:#555;margin-top:6px;padding:8px 12px;background:#0a0a12;border-radius:6px;border-left:3px solid #4ade80}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>&#128205; Google Maps Scraper v5</h1>
+        <div class="header-right">
+            <span class="badge-count" id="sessionCount">0 / 10</span>
+            <span class="badge-count">SMART</span>
+        </div>
+    </div>
+
+    <div class="tab-bar" id="tabBar">
+        <div class="tab-add" onclick="addTab()" title="New tab">+</div>
+    </div>
+
+    <div class="main" id="tabsContainer"></div>
+
+<script>
+var tabData = {};
+var activeTab = null;
+var pollIntervals = {};
+
+function uid(){return Math.random().toString(36).substr(2,8)}
+
+function addTab(){
+    var tabs = Object.keys(tabData);
+    if(tabs.length >= 10) return alert("Max 10 sessions");
+    var sid = uid();
+    tabData[sid] = {sid: sid, name: "Tab " + (tabs.length+1), activePage: "scrape", mode: "country"};
+    renderTabs();
+    switchTab(sid);
+    updateSessionCount();
+}
+
+function removeTab(sid, e){
+    if(e) e.stopPropagation();
+    if(!confirm("Delete session?")) return;
+    delete tabData[sid];
+    if(pollIntervals[sid]) clearInterval(pollIntervals[sid]);
+    var el = document.getElementById("session-"+sid);
+    if(el) el.remove();
+    if(activeTab === sid){
+        var keys = Object.keys(tabData);
+        if(keys.length) switchTab(keys[0]);
+        else activeTab = null;
+    }
+    renderTabs();
+    updateSessionCount();
+}
+
+function switchTab(sid){
+    activeTab = sid;
+    document.querySelectorAll(".tab").forEach(function(t){
+        t.className = t.dataset.sid === sid ? "tab active" : "tab";
+    });
+    document.querySelectorAll(".session-panel").forEach(function(p){
+        p.className = p.dataset.sid === sid ? "session-panel active" : "session-panel";
+    });
+    if(!document.getElementById("session-"+sid)) renderSession(sid);
+    var td = tabData[sid];
+    if(td && td.activePage) showPage(sid, td.activePage);
+    startPolling(sid);
+}
+
+function renderTabs(){
+    var bar = document.getElementById("tabBar");
+    bar.innerHTML = "";
+    Object.keys(tabData).forEach(function(sid){
+        var t = tabData[sid];
+        var el = document.createElement("div");
+        el.className = "tab" + (sid === activeTab ? " active" : "");
+        el.dataset.sid = sid;
+        el.onclick = function(){switchTab(sid)};
+        var dot = document.createElement("span");
+        dot.className = "status-dot idle";
+        dot.id = "dot-"+sid;
+        var lbl = document.createElement("span");
+        lbl.textContent = t.name;
+        var cls = document.createElement("span");
+        cls.className = "close-tab";
+        cls.textContent = "\u00d7";
+        cls.onclick = function(e){removeTab(sid, e)};
+        el.appendChild(dot);
+        el.appendChild(lbl);
+        el.appendChild(cls);
+        bar.appendChild(el);
+    });
+    var addBtn = document.createElement("div");
+    addBtn.className = "tab-add";
+    addBtn.textContent = "+";
+    addBtn.title = "New tab";
+    addBtn.onclick = addTab;
+    bar.appendChild(addBtn);
+}
+
+function renderSession(sid){
+    var container = document.getElementById("tabsContainer");
+    var panel = document.createElement("div");
+    panel.className = "session-panel" + (sid === activeTab ? " active" : "");
+    panel.dataset.sid = sid;
+    panel.id = "session-"+sid;
+
+    var html = '';
+    html += '<div class="page-tabs" id="'+sid+'-pageTabs">';
+    html += '<button class="page-tab active" data-page="scrape" onclick="showPage(\''+sid+'\',\'scrape\')">&#128269; Search</button>';
+    html += '<button class="page-tab" data-page="results" onclick="showPage(\''+sid+'\',\'results\')">&#128202; Results</button>';
+    html += '<button class="page-tab" data-page="files" onclick="showPage(\''+sid+'\',\'files\')">&#128193; Files</button>';
+    html += '</div>';
+
+    html += '<div class="page-section active" id="'+sid+'-sec-scrape">';
+
+    html += '<div class="card">';
+    html += '<h3>Search Mode</h3>';
+    html += '<div class="mode-toggle">';
+    html += '<button class="mode-btn active" data-mode="country" onclick="setMode(\''+sid+'\',\'country\',this)">&#127758; Country</button>';
+    html += '<button class="mode-btn" data-mode="city" onclick="setMode(\''+sid+'\',\'city\',this)">&#127961; City</button>';
+    html += '</div>';
+    html += '<div class="mode-desc" id="'+sid+'-modeDesc"><strong>Country mode:</strong> Enters a country name, finds ALL cities automatically, iterates through them alphabetically, keeps scraping until target is reached.</div>';
+    html += '</div>';
+
+    html += '<div class="card">';
+    html += '<h3>Parameters</h3>';
+    html += '<div class="row">';
+    html += '<div><label>Location</label><input type="text" id="'+sid+'-location" placeholder="USA, London, Berlin, Spain...">';
+    html += '<div class="hint">Country: finds all cities automatically. City: enters radius mode.</div></div>';
+    html += '<div><label>Niche / Category</label><input type="text" id="'+sid+'-niche" placeholder="Barbershop, Restaurant, Dentist..."></div>';
+    html += '</div>';
+    html += '<div class="row">';
+    html += '<div><label>Target results</label><input type="number" id="'+sid+'-max" value="500" min="1">';
+    html += '<div class="hint">Smart mode keeps searching until target is hit</div></div>';
+    html += '<div><div class="toggle-row" style="margin-top:24px;"><div class="toggle" id="'+sid+'-emailToggle" onclick="toggleEmails(\''+sid+'\')"></div><span style="font-size:12px;">Collect emails</span></div></div>';
+    html += '</div>';
+    html += '<div class="radius-row" id="'+sid+'-radiusRow">';
+    html += '<label>Search radius:</label>';
+    html += '<input type="number" id="'+sid+'-radius" value="15" min="1" max="200">';
+    html += '<span>km from city center</span>';
+    html += '</div>';
+    html += '</div>';
+
+    html += '<div style="text-align:center;padding:4px 0;"><button class="btn btn-primary" onclick="startScrape(\''+sid+'\')" style="padding:14px 48px;font-size:15px;">&#128269; Start Smart Search</button></div>';
+    html += '</div>';
+
+    html += '<div class="page-section" id="'+sid+'-sec-results">';
+    html += '<div class="progress-box">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;"><h3 style="color:#4ade80;font-size:15px;">Progress</h3><span class="badge badge-done" id="'+sid+'-statusBadge">Idle</span></div>';
+    html += '<div class="phase-label" id="'+sid+'-phaseLabel"></div>';
+    html += '<div class="progress-bar-bg"><div class="progress-bar-fill" id="'+sid+'-progressBar"></div></div>';
+    html += '<div class="stats">';
+    html += '<div class="stat"><div class="num" id="'+sid+'-statFound">0</div><div class="lbl">Found</div></div>';
+    html += '<div class="stat"><div class="num" id="'+sid+'-statCities">0</div><div class="lbl">Progress</div></div>';
+    html += '<div class="stat"><div class="num" id="'+sid+'-statStatus">-</div><div class="lbl">Status</div></div>';
+    html += '</div>';
+    html += '<div class="btn-row">';
+    html += '<button class="btn btn-success btn-sm" onclick="downloadJSON(\''+sid+'\')" id="'+sid+'-dlJson" style="display:none;">&#11015; JSON</button>';
+    html += '<button class="btn btn-success btn-sm" onclick="downloadCSV(\''+sid+'\')" id="'+sid+'-dlCsv" style="display:none;">&#11015; CSV</button>';
+    html += '<button class="btn btn-danger btn-sm" onclick="resetSession(\''+sid+'\')">&#8634; Reset</button>';
+    html += '</div></div>';
+
+    html += '<div class="progress-box" id="'+sid+'-emailBox" style="display:none;">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;"><h3 style="color:#facc15;font-size:15px;">&#9993; Email collection</h3><span class="badge badge-email" id="'+sid+'-emailBadge">Idle</span></div>';
+    html += '<div class="phase-label" id="'+sid+'-emailPhaseLabel"></div>';
+    html += '<div class="progress-bar-bg"><div class="progress-bar-fill email" id="'+sid+'-emailProgressBar"></div></div>';
+    html += '<div class="stats" style="grid-template-columns:repeat(2,1fr);">';
+    html += '<div class="stat"><div class="num" id="'+sid+'-emailCurrent" style="color:#facc15">0</div><div class="lbl">Processed</div></div>';
+    html += '<div class="stat"><div class="num" id="'+sid+'-emailTotal" style="color:#facc15">0</div><div class="lbl">Total</div></div>';
+    html += '</div></div>';
+
+    html += '<div class="card"><h3>Results <span class="count-badge" id="'+sid+'-resultCount">0</span></h3>';
+    html += '<div class="table-wrap"><table class="result-table">';
+    html += '<thead><tr><th>#</th><th>Name</th><th>City</th><th>Address</th><th>Phone</th><th>Website</th><th>Email</th><th>Rating</th><th>Reviews</th></tr></thead>';
+    html += '<tbody id="'+sid+'-resultBody"><tr><td colspan="9" class="empty-msg">No data</td></tr></tbody>';
+    html += '</table></div></div>';
+
+    html += '<div class="card"><h3>Log</h3><div id="'+sid+'-logBox" style="max-height:100px;overflow-y:auto;"><div class="empty-msg">-</div></div></div>';
+    html += '</div>';
+
+    html += '<div class="page-section" id="'+sid+'-sec-files">';
+    html += '<div class="card"><h3>Saved Files</h3><div id="'+sid+'-filesList"><div class="empty-msg">Loading...</div></div></div>';
+    html += '</div>';
+
+    panel.innerHTML = html;
+    container.appendChild(panel);
+}
+
+function setMode(sid, mode, btn){
+    tabData[sid].mode = mode;
+    var session = document.getElementById("session-"+sid);
+    session.querySelectorAll(".mode-btn").forEach(function(b){b.className = "mode-btn"});
+    btn.className = "mode-btn active";
+    var desc = document.getElementById(sid+"-modeDesc");
+    var radiusRow = document.getElementById(sid+"-radiusRow");
+    if(mode === "country"){
+        desc.innerHTML = "<strong>Country mode:</strong> Enters a country name, finds ALL cities automatically, iterates through them, keeps scraping until target is reached.";
+        radiusRow.className = "radius-row";
+    } else {
+        desc.innerHTML = "<strong>City mode:</strong> Searches within specified radius from city center. Finds all businesses in range.";
+        radiusRow.className = "radius-row visible";
+    }
+}
+
+function showPage(sid, page){
+    if(tabData[sid]) tabData[sid].activePage = page;
+    var session = document.getElementById("session-"+sid);
+    if(!session) return;
+    session.querySelectorAll(".page-section").forEach(function(s){s.className = "page-section"});
+    session.querySelectorAll(".page-tab").forEach(function(b){b.className = "page-tab"});
+    var sec = document.getElementById(sid+"-sec-"+page);
+    if(sec) sec.className = "page-section active";
+    var btn = session.querySelector('.page-tab[data-page="'+page+'"]');
+    if(btn) btn.className = "page-tab active";
+    if(page === "results") loadResults(sid);
+    if(page === "files") loadFiles(sid);
+}
+
+var emailState = {};
+function toggleEmails(sid){
+    emailState[sid] = !emailState[sid];
+    document.getElementById(sid+"-emailToggle").className = emailState[sid] ? "toggle on" : "toggle";
+}
+
+function startScrape(sid){
+    var location = document.getElementById(sid+"-location").value.trim();
+    var niche = document.getElementById(sid+"-niche").value.trim();
+    var maxResults = parseInt(document.getElementById(sid+"-max").value) || 500;
+    var mode = tabData[sid].mode || "country";
+    var radiusKm = parseFloat(document.getElementById(sid+"-radius") ? document.getElementById(sid+"-radius").value : 15) || 15;
+    if(!location) return alert("Enter location");
+    if(!niche) return alert("Enter niche");
+
+    var modeText = mode === "country" ? "Country" : "City ("+radiusKm+"km)";
+    if(!confirm('Scrape "'+niche+'" in "'+location+'"\nMode: '+modeText+'\nTarget: '+maxResults+" results?")) return;
+
+    fetch("/api/scrape",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({session_id:sid,location:location,niche:niche,max_results:maxResults,collect_emails:emailState[sid]||false,mode:mode,radius_km:radiusKm})})
+    .then(function(r){return r.json()})
+    .then(function(d){
+        if(d.error) return alert(d.error);
+        showPage(sid, "results");
+        updateDot(sid, "running");
+    });
+}
+
+function startPolling(sid){
+    if(pollIntervals[sid]) clearInterval(pollIntervals[sid]);
+    pollIntervals[sid] = setInterval(function(){pollStatus(sid)}, 2000);
+}
+
+function pollStatus(sid){
+    fetch("/api/status/"+sid).then(function(r){return r.json()}).then(function(d){
+        var s = d.progress || {};
+        var ep = d.email_progress || {};
+        var g = function(id){return document.getElementById(sid+"-"+id)};
+        if(!g("statFound")) return;
+        g("statFound").textContent = s.found || 0;
+        g("statCities").textContent = s.current + "/" + (s.total || "?");
+        var pct = s.total ? (s.current/s.total*100) : 0;
+        g("progressBar").style.width = pct + "%";
+        var badge = g("statusBadge");
+        var st = s.status || "idle";
+        badge.textContent = st;
+        badge.className = "badge " + (st === "done" ? "badge-done" : "badge-running");
+        g("statStatus").textContent = st.length > 25 ? st.slice(0,25)+"..." : st;
+        g("phaseLabel").textContent = s.phase === "scraping" ? "Smart search in progress..." : "";
+        g("dlJson").style.display = st === "done" ? "inline-block" : "none";
+        g("dlCsv").style.display = st === "done" ? "inline-block" : "none";
+        if(st === "done") updateDot(sid, "done");
+        else if(st !== "idle") updateDot(sid, "running");
+        else updateDot(sid, "idle");
+        if(d.collecting_emails){
+            g("emailBox").style.display = "block";
+            g("emailCurrent").textContent = ep.current || 0;
+            g("emailTotal").textContent = ep.total || 0;
+            var epct = ep.total ? (ep.current/ep.total*100) : 0;
+            g("emailProgressBar").style.width = epct + "%";
+            g("emailBadge").textContent = ep.status || "";
+            g("emailPhaseLabel").textContent = "Collecting emails from websites...";
+        }
+        if(st === "done") loadResults(sid);
+    });
+}
+
+function updateDot(sid, state){
+    var dot = document.getElementById("dot-"+sid);
+    if(dot) dot.className = "status-dot "+state;
+}
+
+function loadResults(sid){
+    fetch("/api/results/"+sid).then(function(r){return r.json()}).then(function(data){
+        var g = function(id){return document.getElementById(sid+"-"+id)};
+        if(!g("resultCount")) return;
+        g("resultCount").textContent = data.length;
+        var tbody = g("resultBody");
+        if(!data.length){tbody.innerHTML='<tr><td colspan="9" class="empty-msg">No results yet</td></tr>';return}
+        tbody.innerHTML = data.map(function(b,i){
+            var phone = b.phone ? '<a href="tel:'+esc(b.phone)+'">'+esc(b.phone)+'</a>' : "-";
+            var site = b.website ? '<a href="'+esc(b.website)+'" target="_blank">'+esc(b.domain||"site")+'</a>' : "-";
+            var emails = b.emails && b.emails.length ? '<span class="emails">'+esc(b.emails.join(", "))+'</span>' : "-";
+            return "<tr><td>"+(i+1)+"</td><td><strong>"+esc(b.name)+"</strong></td><td>"+esc(b.city||"")+"</td><td>"+esc(b.address)+"</td><td>"+phone+"</td><td>"+site+"</td><td>"+emails+"</td><td>"+(b.rating||"-")+"</td><td>"+(b.reviews_count||0)+"</td></tr>";
+        }).join("");
+        fetch("/api/log/"+sid).then(function(r){return r.json()}).then(function(logs){
+            g("logBox").innerHTML = logs.map(function(l){return '<div class="log-entry">'+esc(l)+'</div>'}).join("") || '<div class="empty-msg">-</div>';
+        });
+    });
+}
+
+function loadFiles(sid){
+    fetch("/api/files").then(function(r){return r.json()}).then(function(f){
+        var el = document.getElementById(sid+"-filesList");
+        if(!f.length){el.innerHTML='<div class="empty-msg">No files</div>';return}
+        el.innerHTML = '<div style="display:flex;flex-direction:column;gap:4px;">'+f.map(function(x){
+            return '<div style="padding:10px 14px;background:#14141f;border-radius:6px;display:flex;justify-content:space-between;align-items:center;"><span style="color:#e0e0e0;font-size:13px;">'+x.filename+'</span><span style="color:#4ade80;font-size:12px;">'+x.count+' places</span><a class="btn btn-secondary btn-sm" href="/api/download/'+encodeURIComponent(x.filename)+'" download>JSON</a></div>';
+        }).join("")+"</div>";
+    });
+}
+
+function resetSession(sid){
+    if(!confirm("Reset session?")) return;
+    fetch("/api/reset/"+sid,{method:"POST"}).then(function(r){return r.json()}).then(function(d){
+        var g = function(id){return document.getElementById(sid+"-"+id)};
+        g("statusBadge").textContent = "Idle";
+        g("statusBadge").className = "badge badge-done";
+        g("progressBar").style.width = "0%";
+        g("statFound").textContent = "0";
+        g("statCities").textContent = "0/0";
+        updateDot(sid, "idle");
+    });
+}
+
+function downloadJSON(sid){window.location="/api/download-latest/"+sid}
+function downloadCSV(sid){window.location="/api/download-csv/"+sid}
+function esc(s){var d=document.createElement("div");d.textContent=s||"";return d.innerHTML}
+function updateSessionCount(){document.getElementById("sessionCount").textContent=Object.keys(tabData).length+" / 10"}
+
+addTab();
+</script>
+</body>
+</html>

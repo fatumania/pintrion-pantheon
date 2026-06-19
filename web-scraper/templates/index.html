@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Веб-скрапер</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            padding: 24px 32px;
+            border-bottom: 1px solid #1e3a5f;
+        }
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #00d4ff;
+        }
+        .header p { color: #7a8ba8; margin-top: 4px; font-size: 14px; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+        .search-box {
+            background: #12121a;
+            border: 1px solid #2a2a3a;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .input-row {
+            display: flex;
+            gap: 12px;
+        }
+        .input-row input {
+            flex: 1;
+            padding: 14px 18px;
+            background: #1a1a28;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-row input:focus { border-color: #00d4ff; }
+        .input-row input::placeholder { color: #555; }
+        .btn {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,212,255,0.3); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-secondary {
+            background: #2a2a3a;
+            border: 1px solid #444;
+        }
+        .btn-secondary:hover { background: #333; box-shadow: none; }
+        .spinner {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        .spinner.active { display: block; }
+        .spinner-circle {
+            width: 48px; height: 48px;
+            border: 3px solid #222;
+            border-top-color: #00d4ff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner p { color: #7a8ba8; font-size: 14px; }
+        .result { display: none; }
+        .result.active { display: block; }
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: #12121a;
+            padding: 6px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            border: 1px solid #2a2a3a;
+        }
+        .tab {
+            padding: 10px 18px;
+            background: transparent;
+            border: none;
+            color: #7a8ba8;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 13px;
+            white-space: nowrap;
+            transition: all 0.15s;
+        }
+        .tab:hover { color: #ccc; background: #1a1a28; }
+        .tab.active { background: #00d4ff; color: #000; font-weight: 600; }
+        .panel {
+            display: none;
+            background: #12121a;
+            border: 1px solid #2a2a3a;
+            border-radius: 10px;
+            padding: 20px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .panel.active { display: block; }
+        .panel::-webkit-scrollbar { width: 6px; }
+        .panel::-webkit-scrollbar-track { background: transparent; }
+        .panel::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+        }
+        .info-card {
+            background: #1a1a28;
+            border: 1px solid #2a2a3a;
+            border-radius: 8px;
+            padding: 14px;
+        }
+        .info-card .label { color: #7a8ba8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .info-card .value { color: #00d4ff; font-size: 18px; font-weight: 600; margin-top: 4px; }
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #00d4ff;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #1e2a3a;
+        }
+        .tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
+        .tag {
+            padding: 4px 10px;
+            background: #1a1a28;
+            border: 1px solid #2a2a3a;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #aaa;
+        }
+        .meta-list { display: flex; flex-direction: column; gap: 6px; }
+        .meta-item {
+            padding: 10px;
+            background: #1a1a28;
+            border-radius: 6px;
+            border-left: 3px solid #00d4ff;
+        }
+        .meta-item .key { color: #00d4ff; font-size: 12px; font-weight: 600; }
+        .meta-item .val { color: #ccc; font-size: 13px; margin-top: 2px; word-break: break-all; }
+        .link-list { display: flex; flex-direction: column; gap: 4px; }
+        .link-item {
+            padding: 8px 12px;
+            background: #1a1a28;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .link-item a {
+            color: #00d4ff;
+            text-decoration: none;
+            font-size: 13px;
+            word-break: break-all;
+            flex: 1;
+        }
+        .link-item a:hover { text-decoration: underline; }
+        .link-item .link-text { color: #7a8ba8; font-size: 12px; flex-shrink: 0; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .img-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+        .img-item {
+            background: #1a1a28;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .img-item img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            display: block;
+        }
+        .img-item .img-info { padding: 8px; font-size: 11px; color: #7a8ba8; }
+        .code-block {
+            background: #0d0d14;
+            border: 1px solid #222;
+            border-radius: 6px;
+            padding: 14px;
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+            font-size: 12px;
+            color: #ccc;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-ok { background: #1a3a1a; color: #4ade80; }
+        .badge-err { background: #3a1a1a; color: #f87171; }
+        .badge-info { background: #1a2a3a; color: #60a5fa; }
+        .empty-msg { color: #555; text-align: center; padding: 32px; font-size: 14px; }
+        .contact-item { padding: 8px 12px; background: #1a1a28; border-radius: 6px; margin-bottom: 4px; font-size: 13px; }
+        .error-box {
+            background: #2a1a1a;
+            border: 1px solid #5a2a2a;
+            border-radius: 8px;
+            padding: 16px;
+            color: #f87171;
+        }
+        .download-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            z-index: 100;
+            display: none;
+        }
+        .download-btn.active { display: block; }
+        .history-list { display: flex; flex-direction: column; gap: 4px; }
+        .history-item {
+            padding: 10px 14px;
+            background: #1a1a28;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .history-item:hover { background: #222236; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>&#128269; Веб-скрапер</h1>
+        <p>Получите полную информацию о любом сайте</p>
+    </div>
+
+    <div class="container">
+        <div class="search-box">
+            <div class="input-row">
+                <input type="text" id="urlInput" placeholder="https://example.com" autofocus>
+                <button class="btn" id="scrapeBtn" onclick="startScrape()">Скрапить</button>
+                <button class="btn btn-secondary" onclick="loadHistory()">История</button>
+            </div>
+        </div>
+
+        <div class="spinner" id="spinner">
+            <div class="spinner-circle"></div>
+            <p>Сканирование сайта...</p>
+        </div>
+
+        <div class="result" id="result">
+            <div class="tabs" id="tabs"></div>
+            <div id="panels"></div>
+        </div>
+    </div>
+
+    <button class="download-btn" id="downloadBtn" onclick="downloadJSON()">Скачать JSON</button>
+
+    <script>
+        let currentData = null;
+
+        document.getElementById("urlInput").addEventListener("keydown", (e) => {
+            if (e.key === "Enter") startScrape();
+        });
+
+        async function startScrape() {
+            const url = document.getElementById("urlInput").value.trim();
+            if (!url) return;
+
+            document.getElementById("scrapeBtn").disabled = true;
+            document.getElementById("spinner").className = "spinner active";
+            document.getElementById("result").className = "result";
+            document.getElementById("downloadBtn").className = "download-btn";
+
+            try {
+                const resp = await fetch("/api/scrape", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ url }),
+                });
+                const data = await resp.json();
+
+                if (data.error) {
+                    document.getElementById("spinner").className = "spinner";
+                    document.getElementById("spinner").innerHTML = `<div class="error-box">${escHtml(data.error)}</div>`;
+                    return;
+                }
+
+                currentData = data;
+                renderResult(data);
+                document.getElementById("spinner").className = "spinner";
+                document.getElementById("result").className = "result active";
+                document.getElementById("downloadBtn").className = "download-btn active";
+            } catch (err) {
+                document.getElementById("spinner").className = "spinner";
+                document.getElementById("spinner").innerHTML = `<div class="error-box">${escHtml(err.message)}</div>`;
+            } finally {
+                document.getElementById("scrapeBtn").disabled = false;
+            }
+        }
+
+        function renderResult(data) {
+            const tabs = [
+                { id: "overview", label: "Обзор" },
+                { id: "meta", label: "Мета-теги" },
+                { id: "seo", label: "SEO" },
+                { id: "links", label: "Ссылки" },
+                { id: "images", label: "Картинки" },
+                { id: "forms", label: "Формы" },
+                { id: "social", label: "Соцсети" },
+                { id: "contact", label: "Контакты" },
+                { id: "scripts", label: "Скрипты" },
+                { id: "text", label: "Текст" },
+                { id: "og", label: "OpenGraph" },
+                { id: "html", label: "HTML" },
+            ];
+
+            const tabsEl = document.getElementById("tabs");
+            const panelsEl = document.getElementById("panels");
+            tabsEl.innerHTML = "";
+            panelsEl.innerHTML = "";
+
+            tabs.forEach((t, i) => {
+                const tab = document.createElement("button");
+                tab.className = `tab${i === 0 ? " active" : ""}`;
+                tab.textContent = t.label;
+                tab.onclick = () => switchTab(t.id);
+                tabsEl.appendChild(tab);
+
+                const panel = document.createElement("div");
+                panel.className = `panel${i === 0 ? " active" : ""}`;
+                panel.id = `panel-${t.id}`;
+                panelsEl.appendChild(panel);
+            });
+
+            renderOverview(data);
+            renderMeta(data);
+            renderSEO(data);
+            renderLinks(data);
+            renderImages(data);
+            renderForms(data);
+            renderSocial(data);
+            renderContact(data);
+            renderScripts(data);
+            renderText(data);
+            renderOG(data);
+            renderHTML(data);
+        }
+
+        function switchTab(id) {
+            document.querySelectorAll(".tab").forEach((t, i) => {
+                const ids = ["overview","meta","seo","links","images","forms","social","contact","scripts","text","og","html"];
+                t.className = `tab${ids[i] === id ? " active" : ""}`;
+            });
+            document.querySelectorAll(".panel").forEach(p => p.className = "panel");
+            document.getElementById(`panel-${id}`).className = "panel active";
+        }
+
+        function renderOverview(data) {
+            const pi = data.page_info || {};
+            document.getElementById("panel-overview").innerHTML = `
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="label">URL</div>
+                        <div class="value" style="font-size:13px; word-break:break-all;">${data.url}</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="label">Статус</div>
+                        <div class="value">${data.status_code ? `<span class="badge badge-ok">${data.status_code} OK</span>` : `<span class="badge badge-err">Ошибка</span>`}</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="label">Заголовок</div>
+                        <div class="value" style="font-size:14px;">${pi.title || "—"}</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="label">Язык</div>
+                        <div class="value">${pi.language || "—"}</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="label">Размер HTML</div>
+                        <div class="value">${formatBytes(pi.content_length)}</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="label">Кодировка</div>
+                        <div class="value">${pi.charset || "—"}</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="label">Ссылки</div>
+                        <div class="value">${(data.links?.total_internal || 0) + (data.links?.total_external || 0)}</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="label">Картинки</div>
+                        <div class="value">${(data.images || []).length}</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="label">Формы</div>
+                        <div class="value">${(data.forms || []).length}</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="label">Соцсети</div>
+                        <div class="value">${Object.keys(data.social_links || {}).length}</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="label">Email</div>
+                        <div class="value">${(data.contact_info?.emails || []).length}</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="label">Телефоны</div>
+                        <div class="value">${(data.contact_info?.phones || []).length}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderMeta(data) {
+            const tags = data.meta_tags || [];
+            if (!tags.length) { document.getElementById("panel-meta").innerHTML = '<div class="empty-msg">Мета-теги не найдены</div>'; return; }
+            document.getElementById("panel-meta").innerHTML = `
+                <div class="meta-list">
+                    ${tags.map(t => {
+                        const key = t.name || t.property || t["http-equiv"] || "charset";
+                        return `<div class="meta-item"><div class="key">${escHtml(key)}</div><div class="val">${escHtml(t.content || t.charset || "")}</div></div>`;
+                    }).join("")}
+                </div>
+            `;
+        }
+
+        function renderSEO(data) {
+            const h = data.headings || {};
+            const og = data.open_graph || {};
+            const tc = data.twitter_cards || {};
+            let html = "";
+            Object.keys(h).forEach(k => {
+                html += `<div class="section-title">${k.toUpperCase()} (${h[k].length})</div>`;
+                html += `<div class="tag-list">${h[k].map(v => `<div class="tag">${escHtml(v || "(пусто)")}</div>`).join("")}</div>`;
+                html += `<div style="margin-bottom:12px;"></div>`;
+            });
+            if (!html) html = '<div class="empty-msg">Заголовки не найдены</div>';
+            document.getElementById("panel-seo").innerHTML = html;
+        }
+
+        function renderLinks(data) {
+            const links = data.links || {};
+            const internal = links.internal || [];
+            const external = links.external || [];
+            document.getElementById("panel-links").innerHTML = `
+                <div class="section-title">Внутренние ссылки (${links.total_internal || 0})</div>
+                <div class="link-list" style="margin-bottom:16px;">
+                    ${internal.slice(0, 100).map(l => `<div class="link-item"><a href="${escAttr(l.href)}" target="_blank">${escHtml(l.href)}</a><span class="link-text">${escHtml(l.text)}</span></div>`).join("") || '<div class="empty-msg">Нет</div>'}
+                </div>
+                <div class="section-title">Внешние ссылки (${links.total_external || 0})</div>
+                <div class="link-list">
+                    ${external.slice(0, 100).map(l => `<div class="link-item"><a href="${escAttr(l.href)}" target="_blank">${escHtml(l.href)}</a><span class="link-text">${escHtml(l.text)}</span></div>`).join("") || '<div class="empty-msg">Нет</div>'}
+                </div>
+            `;
+        }
+
+        function renderImages(data) {
+            const imgs = data.images || [];
+            if (!imgs.length) { document.getElementById("panel-images").innerHTML = '<div class="empty-msg">Картинки не найдены</div>'; return; }
+            document.getElementById("panel-images").innerHTML = `
+                <div class="img-grid">
+                    ${imgs.map(i => `<div class="img-item"><img src="${escAttr(i.src)}" alt="${escAttr(i.alt)}" onerror="this.style.display='none'"><div class="img-info">${escHtml(i.alt || i.src || "—")}</div></div>`).join("")}
+                </div>
+            `;
+        }
+
+        function renderForms(data) {
+            const forms = data.forms || [];
+            if (!forms.length) { document.getElementById("panel-forms").innerHTML = '<div class="empty-msg">Формы не найдены</div>'; return; }
+            document.getElementById("panel-forms").innerHTML = forms.map((f, idx) => `
+                <div class="section-title">Форма ${idx + 1} (${f.method})</div>
+                <div class="info-grid" style="margin-bottom:8px;">
+                    <div class="info-card"><div class="label">Action</div><div class="value" style="font-size:12px;word-break:break-all;">${escHtml(f.action || "—")}</div></div>
+                    <div class="info-card"><div class="label">Поля</div><div class="value">${f.inputs.length}</div></div>
+                </div>
+                ${f.inputs.map(i => `<div class="contact-item"><strong>${escHtml(i.name || i.id || i.type)}</strong> (${i.tag}${i.type ? "/" + i.type : ""}) ${i.required ? "required" : ""} ${i.placeholder ? "placeholder=" + escHtml(i.placeholder) : ""}</div>`).join("")}
+            `).join("");
+        }
+
+        function renderSocial(data) {
+            const s = data.social_links || {};
+            const keys = Object.keys(s);
+            if (!keys.length) { document.getElementById("panel-social").innerHTML = '<div class="empty-msg">Соцсети не найдены</div>'; return; }
+            document.getElementById("panel-social").innerHTML = keys.map(k => `
+                <div class="section-title">${k}</div>
+                <div class="link-list">
+                    ${s[k].map(l => `<div class="link-item"><a href="${escAttr(l)}" target="_blank">${escHtml(l)}</a></div>`).join("")}
+                </div>
+            `).join("");
+        }
+
+        function renderContact(data) {
+            const c = data.contact_info || {};
+            const emails = c.emails || [];
+            const phones = c.phones || [];
+            document.getElementById("panel-contact").innerHTML = `
+                <div class="section-title">Email (${emails.length})</div>
+                ${emails.map(e => `<div class="contact-item">✉ ${escHtml(e)}</div>`).join("") || '<div class="empty-msg">Не найдено</div>'}
+                <div class="section-title" style="margin-top:16px;">Телефоны (${phones.length})</div>
+                ${phones.map(p => `<div class="contact-item">☎ ${escHtml(p)}</div>`).join("") || '<div class="empty-msg">Не найдено</div>'}
+            `;
+        }
+
+        function renderScripts(data) {
+            const scripts = data.scripts || [];
+            if (!scripts.length) { document.getElementById("panel-scripts").innerHTML = '<div class="empty-msg">Скрипты не найдены</div>'; return; }
+            document.getElementById("panel-scripts").innerHTML = scripts.map(s => {
+                if (s.type === "external") return `<div class="contact-item">📦 ${escHtml(s.src)}</div>`;
+                return `<div class="contact-item">📝 Inline: <div class="code-block" style="margin-top:8px;">${escHtml(s.preview || "")}</div></div>`;
+            }).join("");
+        }
+
+        function renderText(data) {
+            const text = data.text_content || "";
+            document.getElementById("panel-text").innerHTML = `<div class="code-block">${escHtml(text)}</div>`;
+        }
+
+        function renderOG(data) {
+            const og = data.open_graph || {};
+            const tc = data.twitter_cards || {};
+            let html = '<div class="section-title">Open Graph</div>';
+            const ogKeys = Object.keys(og);
+            if (ogKeys.length) {
+                html += `<div class="meta-list">${ogKeys.map(k => `<div class="meta-item"><div class="key">${escHtml(k)}</div><div class="val">${escHtml(og[k])}</div></div>`).join("")}</div>`;
+            } else {
+                html += '<div class="empty-msg">Open Graph не найден</div>';
+            }
+            html += '<div class="section-title" style="margin-top:16px;">Twitter Cards</div>';
+            const tcKeys = Object.keys(tc);
+            if (tcKeys.length) {
+                html += `<div class="meta-list">${tcKeys.map(k => `<div class="meta-item"><div class="key">${escHtml(k)}</div><div class="val">${escHtml(tc[k])}</div></div>`).join("")}</div>`;
+            } else {
+                html += '<div class="empty-msg">Twitter Cards не найдены</div>';
+            }
+            document.getElementById("panel-og").innerHTML = html;
+        }
+
+        function renderHTML(data) {
+            const html = data.raw_html || "";
+            document.getElementById("panel-html").innerHTML = `<div class="code-block">${escHtml(html)}</div>`;
+        }
+
+        function formatBytes(b) {
+            if (!b) return "0 B";
+            const u = ["B", "KB", "MB"];
+            let i = 0;
+            while (b >= 1024 && i < u.length - 1) { b /= 1024; i++; }
+            return b.toFixed(1) + " " + u[i];
+        }
+
+        function escHtml(s) { const d = document.createElement("div"); d.textContent = s || ""; return d.innerHTML; }
+        function escAttr(s) { return (s || "").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+        function downloadJSON() {
+            if (!currentData) return;
+            const blob = new Blob([JSON.stringify(currentData, null, 2)], { type: "application/json" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = `scrape_${(currentData.url || "result").replace(/[^a-z0-9]/gi, "_").slice(0, 60)}.json`;
+            a.click();
+        }
+
+        async function loadHistory() {
+            const resp = await fetch("/api/history");
+            const files = await resp.json();
+            if (!files.length) {
+                alert("История пуста");
+                return;
+            }
+            const panel = document.getElementById("panel-overview");
+            const existingHistory = document.getElementById("historyModal");
+            if (existingHistory) existingHistory.remove();
+
+            const modal = document.createElement("div");
+            modal.id = "historyModal";
+            modal.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:200;display:flex;align-items:center;justify-content:center;";
+            modal.innerHTML = `
+                <div style="background:#12121a;border:1px solid #2a2a3a;border-radius:12px;padding:24px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                        <h3 style="color:#00d4ff;">История скрапинга</h3>
+                        <button onclick="this.closest('#historyModal').remove()" style="background:none;border:none;color:#7a8ba8;cursor:pointer;font-size:20px;">&times;</button>
+                    </div>
+                    <div class="history-list">
+                        ${files.map(f => `<div class="history-item" data-file="${escAttr(f.filename)}"><span style="color:#e0e0e0;font-size:13px;">${escHtml(f.filename)}</span><span style="color:#555;font-size:12px;">${formatBytes(f.size)}</span></div>`).join("")}
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.querySelectorAll(".history-item").forEach(item => {
+                item.addEventListener("click", () => {
+                    const fn = item.getAttribute("data-file");
+                    loadFile(fn);
+                    modal.remove();
+                });
+            });
+        }
+
+        async function loadFile(filename) {
+            document.getElementById("spinner").className = "spinner active";
+            document.getElementById("result").className = "result";
+            const resp = await fetch(`/api/file/${encodeURIComponent(filename)}`);
+            const data = await resp.json();
+            if (data.error) {
+                document.getElementById("spinner").className = "spinner";
+                document.getElementById("spinner").innerHTML = `<div class="error-box">${escHtml(data.error)}</div>`;
+                return;
+            }
+            currentData = data;
+            renderResult(data);
+            document.getElementById("spinner").className = "spinner";
+            document.getElementById("result").className = "result active";
+            document.getElementById("downloadBtn").className = "download-btn active";
+        }
+    </script>
+</body>
+</html>
