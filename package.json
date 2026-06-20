@@ -1,0 +1,13 @@
+{
+  "name": "pintrion-pantheon",
+  "version": "1.0.0",
+  "description": "Pintrion Pantheon - Multi-Tool Dashboard",
+  "main": "dashboard/server.js",
+  "scripts": {
+    "start": "node dashboard/server.js",
+    "dev": "node dashboard/server.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}

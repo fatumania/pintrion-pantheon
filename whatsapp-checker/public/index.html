@@ -3,88 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phone Checker v3</title>
+    <title>Phone Checker v4.0</title>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:'Segoe UI',system-ui,sans-serif;background:#08080d;color:#e0e0e0;min-height:100vh}
-        .header{background:linear-gradient(135deg,#1a2a3a,#0f2a2f,#1a3a2a);padding:20px 32px;border-bottom:1px solid #2a4a5f;display:flex;justify-content:space-between;align-items:center}
-        .header h1{font-size:22px;font-weight:600;color:#60a5fa}
-        .header .status{padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600}
+        .header{background:linear-gradient(135deg,#1a2a3a,#0f2a2f,#1a3a2a);padding:16px 24px;border-bottom:1px solid #2a4a5f;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+        .header h1{font-size:20px;font-weight:600;color:#60a5fa}
+        .header .statuses{display:flex;gap:8px;flex-wrap:wrap}
+        .status{padding:4px 12px;border-radius:10px;font-size:11px;font-weight:600}
         .status-ok{background:#1a3a1a;color:#4ade80;border:1px solid #2a5a3f}
         .status-off{background:#3a1a1a;color:#f87171;border:1px solid #5a2a2a}
-        .container{max-width:1200px;margin:0 auto;padding:20px}
-        .nav{display:flex;gap:4px;background:#10101a;padding:5px;border-radius:10px;margin-bottom:20px;border:1px solid #222;flex-wrap:wrap}
-        .nav-btn{padding:9px 18px;background:0 0;border:0;color:#7a8ba8;cursor:pointer;border-radius:6px;font-size:13px;transition:.15s}
+        .status-wait{background:#3a3a1a;color:#facc15;border:1px solid #5a5a2a}
+        .container{max-width:1400px;margin:0 auto;padding:16px}
+        .nav{display:flex;gap:3px;background:#10101a;padding:4px;border-radius:10px;margin-bottom:16px;border:1px solid #222;flex-wrap:wrap}
+        .nav-btn{padding:8px 16px;background:0 0;border:0;color:#7a8ba8;cursor:pointer;border-radius:6px;font-size:12px;transition:.15s;white-space:nowrap}
         .nav-btn:hover{color:#ccc;background:#1a1a28}
         .nav-btn.active{background:#60a5fa;color:#000;font-weight:600}
         .page{display:none}.page.active{display:block}
-        .card{background:#10101a;border:1px solid #222;border-radius:10px;padding:20px;margin-bottom:14px}
-        .card h3{color:#60a5fa;font-size:15px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #1a1a28}
-        label{display:block;color:#7a8ba8;font-size:12px;margin-bottom:5px;margin-top:10px}
-        input[type="text"],input[type="number"],textarea,select{width:100%;padding:10px 12px;background:#14141f;border:1px solid #2a2a3a;border-radius:7px;color:#fff;font-size:13px;outline:0;transition:.2s;font-family:inherit}
+        .card{background:#10101a;border:1px solid #222;border-radius:10px;padding:16px;margin-bottom:12px}
+        .card h3{color:#60a5fa;font-size:14px;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid #1a1a28}
+        label{display:block;color:#7a8ba8;font-size:11px;margin-bottom:4px;margin-top:8px}
+        input[type="text"],input[type="number"],textarea,select{width:100%;padding:8px 10px;background:#14141f;border:1px solid #2a2a3a;border-radius:6px;color:#fff;font-size:12px;outline:0;transition:.2s;font-family:inherit}
         input:focus,textarea:focus,select:focus{border-color:#60a5fa}
-        textarea{min-height:80px;resize:vertical;font-family:'Cascadia Code',monospace;font-size:12px}
-        .btn{padding:10px 20px;border:0;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:6px}
+        textarea{min-height:70px;resize:vertical;font-family:'Cascadia Code',monospace;font-size:11px}
+        .btn{padding:8px 16px;border:0;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:5px}
         .btn:disabled{opacity:.4;cursor:not-allowed}
         .btn-primary{background:linear-gradient(135deg,#60a5fa,#3b82f6);color:#fff}
-        .btn-primary:hover:not(:disabled){box-shadow:0 4px 20px rgba(96,165,250,.3)}
         .btn-success{background:linear-gradient(135deg,#25d366,#128c7e);color:#fff}
-        .btn-success:hover:not(:disabled){box-shadow:0 4px 20px rgba(37,211,102,.3)}
         .btn-danger{background:linear-gradient(135deg,#f87171,#dc2626);color:#fff}
         .btn-secondary{background:#222;color:#aaa;border:1px solid #333}
-        .btn-sm{padding:6px 12px;font-size:11px}
-        .row{display:flex;gap:10px}.row>*{flex:1}
-        .btn-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
-        .hint{color:#444;font-size:11px;margin-top:3px}
-        .qr-box{text-align:center;padding:20px;background:#14141f;border-radius:10px;border:1px dashed #333}
-        .qr-box img{max-width:280px;border-radius:8px}
-        .result-table{width:100%;border-collapse:collapse;font-size:12px}
-        .result-table th{text-align:left;padding:6px 8px;background:#14141f;color:#60a5fa;border-bottom:1px solid #222;position:sticky;top:0;z-index:1}
-        .result-table td{padding:5px 8px;border-bottom:1px solid #1a1a28}
+        .btn-telegram{background:linear-gradient(135deg,#2AABEE,#229ED9);color:#fff}
+        .btn-sm{padding:5px 10px;font-size:10px}
+        .row{display:flex;gap:8px}.row>*{flex:1}
+        .btn-row{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+        .hint{color:#444;font-size:10px;margin-top:2px}
+        .qr-box{text-align:center;padding:16px;background:#14141f;border-radius:8px;border:1px dashed #333}
+        .qr-box img{max-width:260px;border-radius:6px}
+        .result-table{width:100%;border-collapse:collapse;font-size:11px}
+        .result-table th{text-align:left;padding:5px 6px;background:#14141f;color:#60a5fa;border-bottom:1px solid #222;position:sticky;top:0;z-index:1}
+        .result-table td{padding:4px 6px;border-bottom:1px solid #1a1a28}
         .result-table tr:hover td{background:#14141f}
-        .table-wrap{max-height:55vh;overflow:auto;border-radius:8px;border:1px solid #222}
-        .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+        .table-wrap{max-height:50vh;overflow:auto;border-radius:6px;border:1px solid #222}
+        .badge{display:inline-block;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600}
         .badge-yes{background:#1a3a1a;color:#4ade80}
         .badge-no{background:#3a1a1a;color:#f87171}
         .badge-err{background:#3a3a1a;color:#facc15}
         .badge-info{background:#1a2a3a;color:#60a5fa}
-        .badge-inv{background:#2a2a3a;color:#7a8ba8}
-        .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-        .stat{text-align:center;padding:10px;background:#14141f;border-radius:7px}
-        .stat .num{font-size:20px;font-weight:700;color:#60a5fa}
-        .stat .lbl{font-size:11px;color:#555;margin-top:2px}
-        .empty-msg{color:#444;text-align:center;padding:24px;font-size:13px}
-        .progress-bar-bg{width:100%;height:8px;background:#1a1a28;border-radius:4px;overflow:hidden;margin:10px 0}
-        .progress-bar-fill{height:100%;background:linear-gradient(90deg,#60a5fa,#3b82f6);border-radius:4px;transition:width .3s;width:0}
-        .file-drop{border:2px dashed #333;border-radius:10px;padding:30px;text-align:center;cursor:pointer;transition:.2s}
+        .badge-na{background:#222;color:#666}
+        .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+        .stat{text-align:center;padding:8px;background:#14141f;border-radius:6px}
+        .stat .num{font-size:18px;font-weight:700;color:#60a5fa}
+        .stat .lbl{font-size:10px;color:#555;margin-top:2px}
+        .empty-msg{color:#444;text-align:center;padding:20px;font-size:12px}
+        .progress-bar-bg{width:100%;height:6px;background:#1a1a28;border-radius:3px;overflow:hidden;margin:8px 0}
+        .progress-bar-fill{height:100%;background:linear-gradient(90deg,#60a5fa,#3b82f6);border-radius:3px;transition:width .3s;width:0}
+        .file-drop{border:2px dashed #333;border-radius:8px;padding:24px;text-align:center;cursor:pointer;transition:.2s}
         .file-drop:hover,.file-drop.active{border-color:#60a5fa;background:#14141f}
-        .file-drop .icon{font-size:36px;margin-bottom:8px}
-        .file-drop p{color:#555;font-size:13px}
-        .file-drop .formats{color:#333;font-size:11px;margin-top:4px}
-        .speed-control{display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px;background:#14141f;border-radius:7px;flex-wrap:wrap}
-        .speed-control label{margin:0;color:#7a8ba8;font-size:12px}
-        .speed-control select{background:#1a1a28;border:1px solid #333;border-radius:5px;color:#fff;padding:4px 8px;font-size:12px}
-        .phase{font-size:12px;color:#60a5fa;margin-bottom:4px}
-        .services-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:14px}
-        .service-card{padding:14px;background:#14141f;border-radius:8px;border:1px solid #222;cursor:pointer;transition:.2s}
+        .file-drop .icon{font-size:30px;margin-bottom:6px}
+        .file-drop p{color:#555;font-size:12px}
+        .file-drop .formats{color:#333;font-size:10px;margin-top:3px}
+        .services-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:10px}
+        .service-card{padding:12px;background:#14141f;border-radius:6px;border:1px solid #222;cursor:pointer;transition:.2s}
         .service-card:hover{border-color:#60a5fa}
         .service-card.active{border-color:#60a5fa;background:#1a2a3a}
-        .service-card .svc-name{font-size:14px;font-weight:600;color:#e0e0e0}
-        .service-card .svc-desc{font-size:11px;color:#555;margin-top:4px}
-        .service-card .svc-icon{font-size:20px;margin-bottom:6px}
-        .service-card input[type="checkbox"]{margin-right:6px}
-        .single-result{margin-top:12px;padding:14px;background:#14141f;border-radius:8px;border:1px solid #222}
-        .single-result h4{color:#60a5fa;font-size:13px;margin-bottom:10px}
-        .result-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1a1a28;font-size:12px}
+        .service-card .svc-name{font-size:13px;font-weight:600;color:#e0e0e0}
+        .service-card .svc-desc{font-size:10px;color:#555;margin-top:3px}
+        .service-card .svc-icon{font-size:18px;margin-bottom:4px}
+        .service-card input[type="checkbox"]{margin-right:4px}
+        .single-result{margin-top:10px;padding:12px;background:#14141f;border-radius:6px;border:1px solid #222}
+        .single-result h4{color:#60a5fa;font-size:12px;margin-bottom:8px}
+        .result-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #1a1a28;font-size:11px}
         .result-row:last-child{border:0}
         .result-label{color:#555}
         .result-value{color:#e0e0e0;font-weight:500}
+        .speed-control{display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px;background:#14141f;border-radius:6px;flex-wrap:wrap}
+        .speed-control label{margin:0;color:#7a8ba8;font-size:11px}
+        .speed-control select{background:#1a1a28;border:1px solid #333;border-radius:4px;color:#fff;padding:3px 6px;font-size:11px}
+        .messenger-results{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px;margin-top:8px}
+        .messenger-item{padding:8px 10px;background:#14141f;border-radius:6px;border:1px solid #222;display:flex;justify-content:space-between;align-items:center;font-size:11px}
+        .messenger-item .name{font-weight:600;color:#e0e0e0}
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>Phone Checker</h1>
-        <span class="status status-off" id="connStatus">WhatsApp: offline</span>
+        <h1>Phone Checker v4.0</h1>
+        <div class="statuses">
+            <span class="status status-off" id="waStatus">WhatsApp: offline</span>
+        </div>
     </div>
     <div class="container">
         <div class="nav">
@@ -98,42 +103,49 @@
         <div class="page active" id="page-connect">
             <div class="card">
                 <h3>Подключение к WhatsApp</h3>
-                <p style="color:#555;font-size:12px;margin-bottom:14px;">Для проверки номеров в WhatsApp необходима привязка аккаунта.</p>
-                <div class="qr-box" id="qrBox"><p>Нажмите "Подключить" и отсканируйте QR код</p></div>
-                <div class="btn-row"><button class="btn btn-success" onclick="connect()" id="connectBtn">Подключить WhatsApp</button></div>
+                <p style="color:#555;font-size:11px;margin-bottom:12px;">Только WhatsApp требует привязки аккаунта. Telegram, Viber, Signal и IMO работают без подключения — просто вводите номер и проверяйте.</p>
+                <div class="qr-box" id="qrBox"><p style="color:#555">Нажмите "Подключить" и отсканируйте QR код в WhatsApp (Настройки - Привязанные устройства)</p></div>
+                <div class="btn-row">
+                    <button class="btn btn-success" onclick="connect()" id="connectBtn">Подключить WhatsApp</button>
+                    <button class="btn btn-danger" onclick="disconnect()" id="disconnectBtn" style="display:none">Отключить</button>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Как пользоваться</h3>
+                <p style="color:#7a8ba8;font-size:12px;line-height:1.6;">
+                    <strong>WhatsApp</strong> — нажмите "Подключить", отсканируйте QR код телефоном<br>
+                    <strong>Telegram</strong> — работает сразу, проверка через API<br>
+                    <strong>Viber</strong> — работает сразу, проверка через API<br>
+                    <strong>Signal</strong> — работает сразу, проверка регистрации<br>
+                    <strong>IMO</strong> — работает сразу, проверка регистрации
+                </p>
+            </div>
+            <div class="card">
+                <h3>Поддерживаемые мессенджеры</h3>
+                <div class="services-grid">
+                    <div class="service-card"><div class="svc-icon">&#128172;</div><div class="svc-name">WhatsApp</div><div class="svc-desc">Через Web API</div></div>
+                    <div class="service-card"><div class="svc-icon">&#9993;</div><div class="svc-name">Telegram</div><div class="svc-desc">Через Bot API</div></div>
+                    <div class="service-card"><div class="svc-icon">&#128227;</div><div class="svc-name">Viber</div><div class="svc-desc">Через Bot API</div></div>
+                    <div class="service-card"><div class="svc-icon">&#128274;</div><div class="svc-name">Signal</div><div class="svc-desc">Проверка регистрации</div></div>
+                    <div class="service-card"><div class="svc-icon">&#128172;</div><div class="svc-name">IMO</div><div class="svc-desc">Проверка регистрации</div></div>
+                </div>
             </div>
         </div>
 
         <div class="page" id="page-validate">
             <div class="card">
                 <h3>Валидация номера</h3>
-                <p style="color:#555;font-size:12px;margin-bottom:10px;">Проверка формата, страны, оператора и типа номера. Работает без API — всё локально.</p>
+                <p style="color:#555;font-size:11px;margin-bottom:8px;">Проверка формата, страны, типа. Автоопределение страны по номеру.</p>
                 <div class="row">
                     <div style="flex:3">
                         <input type="text" id="validateInput" placeholder="+37360012345 или 79001234567">
                     </div>
                     <div style="flex:1">
-                        <select id="validateCountry">
-                            <option value="MD">Молдова (+373)</option>
-                            <option value="RU">Россия (+7)</option>
-                            <option value="UA">Украина (+380)</option>
-                            <option value="RO">Румыния (+40)</option>
-                            <option value="GB">Великобритания (+44)</option>
-                            <option value="DE">Германия (+49)</option>
-                            <option value="US">США (+1)</option>
-                            <option value="FR">Франция (+33)</option>
-                            <option value="ES">Испания (+34)</option>
-                            <option value="IT">Италия (+39)</option>
-                            <option value="PL">Польша (+48)</option>
-                            <option value="TR">Турция (+90)</option>
-                            <option value="CN">Китай (+86)</option>
-                            <option value="IN">Индия (+91)</option>
-                            <option value="JP">Япония (+81)</option>
-                        </select>
+                        <select id="validateCountry"></select>
                     </div>
                     <div style="flex:1"><button class="btn btn-primary" onclick="validateSingle()" style="width:100%">Проверить</button></div>
                 </div>
-                <div class="hint">Формат: код страны + номер. Пример: +37360012345, +447852462672</div>
+                <div class="hint">Формат: код страны + номер. Страна определяется автоматически. Пример: +37360012345, +447852462672</div>
                 <div id="validateResult"></div>
             </div>
         </div>
@@ -141,12 +153,12 @@
         <div class="page" id="page-single">
             <div class="card">
                 <h3>Проверить номер</h3>
-                <p style="color:#555;font-size:12px;margin-bottom:10px;">Валидация + проверка в WhatsApp (если подключён).</p>
+                <p style="color:#555;font-size:11px;margin-bottom:8px;">Валидация + проверка во всех мессенджерах. Страна определяется автоматически.</p>
                 <div class="row">
                     <div style="flex:3"><input type="text" id="phoneInput" placeholder="79001234567 (код страны + номер)"></div>
                     <div style="flex:1"><button class="btn btn-primary" onclick="checkSingle()" style="width:100%">Проверить</button></div>
                 </div>
-                <div class="hint">Формат: код страны + номер без пробелов и знаков. Пример: 79001234567, 447852462672</div>
+                <div class="hint">Формат: код страны + номер без пробелов. Пример: 79001234567, 447852462672</div>
                 <div id="singleResult"></div>
             </div>
         </div>
@@ -157,56 +169,70 @@
                 <div class="file-drop" id="fileDrop" onclick="document.getElementById('fileInput').click()">
                     <div class="icon">&#128194;</div>
                     <p>Перетащите файл или нажмите для выбора</p>
-                    <div class="formats">JSON, CSV, TXT — извлечёт все номера автоматически</div>
+                    <div class="formats">JSON, CSV, TXT</div>
                 </div>
                 <input type="file" id="fileInput" accept=".json,.csv,.txt" style="display:none" onchange="handleFile(this)">
 
                 <label>Или вставьте номера вручную</label>
                 <textarea id="batchInput" placeholder="79001234567&#10;447852462672&#10;37360012345"></textarea>
 
-                <label>Какие проверки выполнять:</label>
-                <div class="services-grid">
+                <label>Проверки:</label>
+                <div class="services-grid" id="servicesGrid">
                     <div class="service-card active" onclick="toggleService(this,'validation')">
                         <div class="svc-icon">&#128269;</div>
                         <div class="svc-name"><input type="checkbox" checked disabled> Валидация</div>
-                        <div class="svc-desc">Формат, страна, оператор, тип</div>
+                        <div class="svc-desc">Формат, страна, тип</div>
                     </div>
                     <div class="service-card" onclick="toggleService(this,'whatsapp')">
                         <div class="svc-icon">&#128172;</div>
                         <div class="svc-name"><input type="checkbox"> WhatsApp</div>
-                        <div class="svc-desc">Зарегистрирован ли номер</div>
+                        <div class="svc-desc">Нужно подключение</div>
+                    </div>
+                    <div class="service-card" onclick="toggleService(this,'telegram')">
+                        <div class="svc-icon">&#9993;</div>
+                        <div class="svc-name"><input type="checkbox"> Telegram</div>
+                        <div class="svc-desc">Через Bot API</div>
+                    </div>
+                    <div class="service-card" onclick="toggleService(this,'viber')">
+                        <div class="svc-icon">&#128227;</div>
+                        <div class="svc-name"><input type="checkbox"> Viber</div>
+                        <div class="svc-desc">Через Bot API</div>
+                    </div>
+                    <div class="service-card" onclick="toggleService(this,'signal')">
+                        <div class="svc-icon">&#128274;</div>
+                        <div class="svc-name"><input type="checkbox"> Signal</div>
+                        <div class="svc-desc">Проверка регистрации</div>
+                    </div>
+                    <div class="service-card" onclick="toggleService(this,'imo')">
+                        <div class="svc-icon">&#128172;</div>
+                        <div class="svc-name"><input type="checkbox"> IMO</div>
+                        <div class="svc-desc">Проверка регистрации</div>
                     </div>
                 </div>
 
                 <div class="speed-control">
-                    <label>Страна по умолчанию:</label>
-                    <select id="batchCountry">
-                        <option value="MD">Молдова</option>
-                        <option value="RU">Россия</option>
-                        <option value="UA">Украина</option>
-                        <option value="GB">Великобритания</option>
-                        <option value="DE">Германия</option>
-                    </select>
-                    <label>Задержка:</label>
+                    <label>Страна: автоопределение</label>
+                    <label style="margin-left:auto">Задержка:</label>
                     <select id="delaySelect">
-                        <option value="500">Быстро (0.5 сек)</option>
-                        <option value="1000">Нормально (1 сек)</option>
-                        <option value="1500" selected>Безопасно (1.5 сек)</option>
-                        <option value="3000">Медленно (3 сек)</option>
+                        <option value="300">Быстро (0.3 сек)</option>
+                        <option value="500">Нормально (0.5 сек)</option>
+                        <option value="1000">Безопасно (1 сек)</option>
+                        <option value="1500" selected>Медленно (1.5 сек)</option>
+                        <option value="3000">Очень медленно (3 сек)</option>
                     </select>
                 </div>
 
                 <div class="btn-row">
                     <button class="btn btn-primary" onclick="startBatch()">Начать проверку</button>
-                    <button class="btn btn-danger" onclick="stopBatch()" id="stopBtn" style="display:none;">Остановить</button>
-                    <button class="btn btn-secondary" onclick="downloadResults()" id="dlBtn" style="display:none;">Скачать JSON</button>
-                    <button class="btn btn-secondary" onclick="downloadCSV()" id="dlCsvBtn" style="display:none;">Скачать CSV</button>
+                    <button class="btn btn-danger" onclick="stopBatch()" id="stopBtn" style="display:none">Остановить</button>
+                    <button class="btn btn-secondary" onclick="downloadJSON()" id="dlJsonBtn" style="display:none">Скачать JSON</button>
+                    <button class="btn btn-secondary" onclick="downloadCSV()" id="dlCsvBtn" style="display:none">Скачать CSV</button>
                 </div>
             </div>
 
-            <div class="card" id="progressCard" style="display:none;">
+            <div class="card" id="progressCard" style="display:none">
                 <h3>Прогресс</h3>
-                <div class="phase" id="phaseLabel"></div>
+                <div id="phaseLabel" style="font-size:11px;color:#60a5fa;margin-bottom:4px"></div>
                 <div class="progress-bar-bg"><div class="progress-bar-fill" id="batchBar"></div></div>
                 <div class="stats">
                     <div class="stat"><div class="num" id="statCurrent">0</div><div class="lbl">Проверено</div></div>
@@ -216,11 +242,11 @@
                 </div>
             </div>
 
-            <div class="card" id="resultsCard" style="display:none;">
-                <h3>Результаты <span id="resultCount" style="color:#60a5fa;font-size:13px;"></span></h3>
+            <div class="card" id="resultsCard" style="display:none">
+                <h3>Результаты <span id="resultCount" style="color:#60a5fa;font-size:12px"></span></h3>
                 <div class="table-wrap">
                     <table class="result-table">
-                        <thead><tr><th>#</th><th>Номер</th><th>Страна</th><th>Тип</th><th>Валиден</th><th>WhatsApp</th><th>Формат</th></tr></thead>
+                        <thead><tr id="batchHead"></tr></thead>
                         <tbody id="batchBody"></tbody>
                     </table>
                 </div>
@@ -236,7 +262,111 @@
     </div>
 
 <script>
-var pollInterval=null,batchPhones=[],selectedServices=['validation'];
+var pollInterval=null,selectedServices=['validation'];
+
+var MESSENGERS=[
+    {id:'whatsapp',name:'WhatsApp',icon:'\u{1F4AC}',color:'#25D366'},
+    {id:'telegram',name:'Telegram',icon:'\u{2709}',color:'#2AABEE'},
+    {id:'viber',name:'Viber',icon:'\u{1F4DE}',color:'#7360FE'},
+    {id:'signal',name:'Signal',icon:'\u{1F512}',color:'#3A76F0'},
+    {id:'imo',name:'IMO',icon:'\u{1F4AC}',color:'#FF6600'}
+];
+
+var COUNTRIES=[
+{code:"AF",name:"Афганистан",dial:"93"},{code:"AL",name:"Албания",dial:"355"},{code:"DZ",name:"Алжир",dial:"213"},
+{code:"AD",name:"Андорра",dial:"376"},{code:"AO",name:"Ангола",dial:"244"},{code:"AR",name:"Аргентина",dial:"54"},
+{code:"AM",name:"Армения",dial:"374"},{code:"AU",name:"Австралия",dial:"61"},{code:"AT",name:"Австрия",dial:"43"},
+{code:"AZ",name:"Азербайджан",dial:"994"},{code:"BS",name:"Багамы",dial:"1242"},{code:"BH",name:"Бахрейн",dial:"973"},
+{code:"BD",name:"Бангладеш",dial:"880"},{code:"BB",name:"Барбадос",dial:"1246"},{code:"BY",name:"Беларусь",dial:"375"},
+{code:"BE",name:"Бельгия",dial:"32"},{code:"BZ",name:"Белиз",dial:"501"},{code:"BJ",name:"Бенин",dial:"229"},
+{code:"BT",name:"Бутан",dial:"975"},{code:"BO",name:"Боливия",dial:"591"},{code:"BA",name:"Босния",dial:"387"},
+{code:"BW",name:"Ботсвана",dial:"267"},{code:"BR",name:"Бразилия",dial:"55"},{code:"BN",name:"Бруней",dial:"673"},
+{code:"BG",name:"Болгария",dial:"359"},{code:"BF",name:"Буркина-Фасо",dial:"226"},{code:"BI",name:"Бурунди",dial:"257"},
+{code:"KH",name:"Камбоджа",dial:"855"},{code:"CM",name:"Камерун",dial:"237"},{code:"CA",name:"Канада",dial:"1"},
+{code:"CV",name:"Кабо-Верде",dial:"238"},{code:"CF",name:"ЦАР",dial:"236"},{code:"TD",name:"Чад",dial:"235"},
+{code:"CL",name:"Чили",dial:"56"},{code:"CN",name:"Китай",dial:"86"},{code:"CO",name:"Колумбия",dial:"57"},
+{code:"KM",name:"Коморы",dial:"269"},{code:"CG",name:"Конго",dial:"242"},{code:"CR",name:"Коста-Рика",dial:"506"},
+{code:"HR",name:"Хорватия",dial:"385"},{code:"CU",name:"Куба",dial:"53"},{code:"CY",name:"Кипр",dial:"357"},
+{code:"CZ",name:"Чехия",dial:"420"},{code:"DK",name:"Дания",dial:"45"},{code:"DJ",name:"Джибути",dial:"253"},
+{code:"DO",name:"Доминикана",dial:"1809"},{code:"EC",name:"Эквадор",dial:"593"},{code:"EG",name:"Египет",dial:"20"},
+{code:"SV",name:"Сальвадор",dial:"503"},{code:"GQ",name:"Экваториальная Гвинея",dial:"240"},{code:"ER",name:"Эритрея",dial:"291"},
+{code:"EE",name:"Эстония",dial:"372"},{code:"ET",name:"Эфиопия",dial:"251"},{code:"FJ",name:"Фиджи",dial:"679"},
+{code:"FI",name:"Финляндия",dial:"358"},{code:"FR",name:"Франция",dial:"33"},{code:"GA",name:"Габон",dial:"241"},
+{code:"GM",name:"Гамбия",dial:"220"},{code:"GE",name:"Грузия",dial:"995"},{code:"DE",name:"Германия",dial:"49"},
+{code:"GH",name:"Гана",dial:"233"},{code:"GR",name:"Греция",dial:"30"},{code:"GT",name:"Гватемала",dial:"502"},
+{code:"GN",name:"Гвинея",dial:"224"},{code:"GW",name:"Гвинея-Бисау",dial:"245"},{code:"GY",name:"Гайана",dial:"592"},
+{code:"HT",name:"Гаити",dial:"509"},{code:"HN",name:"Гондурас",dial:"504"},{code:"HK",name:"Гонконг",dial:"852"},
+{code:"HU",name:"Венгрия",dial:"36"},{code:"IS",name:"Исландия",dial:"354"},{code:"IN",name:"Индия",dial:"91"},
+{code:"ID",name:"Индонезия",dial:"62"},{code:"IR",name:"Иран",dial:"98"},{code:"IQ",name:"Ирак",dial:"964"},
+{code:"IE",name:"Ирландия",dial:"353"},{code:"IL",name:"Израиль",dial:"972"},{code:"IT",name:"Италия",dial:"39"},
+{code:"CI",name:"Кот-д'Ивуар",dial:"225"},{code:"JM",name:"Ямайка",dial:"1876"},{code:"JP",name:"Япония",dial:"81"},
+{code:"JO",name:"Иордания",dial:"962"},{code:"KZ",name:"Казахстан",dial:"7"},{code:"KE",name:"Кения",dial:"254"},
+{code:"KI",name:"Кирибати",dial:"686"},{code:"KW",name:"Кувейт",dial:"965"},{code:"KG",name:"Кыргызстан",dial:"996"},
+{code:"LA",name:"Лаос",dial:"856"},{code:"LV",name:"Латвия",dial:"371"},{code:"LB",name:"Ливан",dial:"961"},
+{code:"LS",name:"Лесото",dial:"266"},{code:"LR",name:"Либерия",dial:"231"},{code:"LY",name:"Ливия",dial:"218"},
+{code:"LI",name:"Лихтенштейн",dial:"423"},{code:"LT",name:"Литва",dial:"370"},{code:"LU",name:"Люксембург",dial:"352"},
+{code:"MO",name:"Макао",dial:"853"},{code:"MK",name:"Македония",dial:"389"},{code:"MG",name:"Мадагаскар",dial:"261"},
+{code:"MW",name:"Малави",dial:"265"},{code:"MY",name:"Малайзия",dial:"60"},{code:"MV",name:"Мальдивы",dial:"960"},
+{code:"ML",name:"Мали",dial:"223"},{code:"MT",name:"Мальта",dial:"356"},{code:"MR",name:"Мавритания",dial:"222"},
+{code:"MU",name:"Маврикий",dial:"230"},{code:"MX",name:"Мексика",dial:"52"},{code:"MD",name:"Молдова",dial:"373"},
+{code:"MC",name:"Монако",dial:"377"},{code:"MN",name:"Монголия",dial:"976"},{code:"ME",name:"Черногория",dial:"382"},
+{code:"MA",name:"Марокко",dial:"212"},{code:"MZ",name:"Мозамбик",dial:"258"},{code:"MM",name:"Мьянма",dial:"95"},
+{code:"NA",name:"Намибия",dial:"264"},{code:"NP",name:"Непал",dial:"977"},{code:"NL",name:"Нидерланды",dial:"31"},
+{code:"NZ",name:"Новая Зеландия",dial:"64"},{code:"NI",name:"Никарагуа",dial:"505"},{code:"NE",name:"Нигер",dial:"227"},
+{code:"NG",name:"Нигерия",dial:"234"},{code:"KP",name:"Северная Корея",dial:"850"},{code:"NO",name:"Норвегия",dial:"47"},
+{code:"OM",name:"Оман",dial:"968"},{code:"PK",name:"Пакистан",dial:"92"},{code:"PA",name:"Панама",dial:"507"},
+{code:"PG",name:"Папуа-Новая Гвинея",dial:"675"},{code:"PY",name:"Парагвай",dial:"595"},{code:"PE",name:"Перу",dial:"51"},
+{code:"PH",name:"Филиппины",dial:"63"},{code:"PL",name:"Польша",dial:"48"},{code:"PT",name:"Португалия",dial:"351"},
+{code:"QA",name:"Катар",dial:"974"},{code:"RO",name:"Румыния",dial:"40"},{code:"RU",name:"Россия",dial:"7"},
+{code:"RW",name:"Руанда",dial:"250"},{code:"SA",name:"Саудовская Аравия",dial:"966"},{code:"SN",name:"Сенегал",dial:"221"},
+{code:"RS",name:"Сербия",dial:"381"},{code:"SC",name:"Сейшелы",dial:"248"},{code:"SL",name:"Сьерра-Леоне",dial:"232"},
+{code:"SG",name:"Сингапур",dial:"65"},{code:"SK",name:"Словакия",dial:"421"},{code:"SI",name:"Словения",dial:"386"},
+{code:"SO",name:"Сомали",dial:"252"},{code:"ZA",name:"ЮАР",dial:"27"},{code:"KR",name:"Южная Корея",dial:"82"},
+{code:"ES",name:"Испания",dial:"34"},{code:"LK",name:"Шри-Ланка",dial:"94"},{code:"SD",name:"Судан",dial:"249"},
+{code:"SR",name:"Суринам",dial:"597"},{code:"SZ",name:"Свазиленд",dial:"268"},{code:"SE",name:"Швеция",dial:"46"},
+{code:"CH",name:"Швейцария",dial:"41"},{code:"SY",name:"Сирия",dial:"963"},{code:"TW",name:"Тайвань",dial:"886"},
+{code:"TJ",name:"Таджикистан",dial:"992"},{code:"TZ",name:"Танзания",dial:"255"},{code:"TH",name:"Таиланд",dial:"66"},
+{code:"TG",name:"Того",dial:"228"},{code:"TO",name:"Тонга",dial:"676"},{code:"TN",name:"Тунис",dial:"216"},
+{code:"TR",name:"Турция",dial:"90"},{code:"TM",name:"Туркменистан",dial:"993"},{code:"UG",name:"Уганда",dial:"256"},
+{code:"UA",name:"Украина",dial:"380"},{code:"AE",name:"ОАЭ",dial:"971"},{code:"GB",name:"Великобритания",dial:"44"},
+{code:"US",name:"США",dial:"1"},{code:"UY",name:"Уругвай",dial:"598"},{code:"UZ",name:"Узбекистан",dial:"998"},
+{code:"VU",name:"Вануату",dial:"678"},{code:"VE",name:"Венесуэла",dial:"58"},{code:"VN",name:"Вьетнам",dial:"84"},
+{code:"YE",name:"Йемен",dial:"967"},{code:"ZM",name:"Замбия",dial:"260"},{code:"ZW",name:"Зимбабве",dial:"263"},
+{code:"XK",name:"Косово",dial:"383"},{code:"GE",name:"Грузия",dial:"995"},{code:"BD",name:"Бангладеш",dial:"880"},
+{code:"LK",name:"Шри-Ланка",dial:"94"},{code:"NP",name:"Непал",dial:"977"},{code:"MM",name:"Мьянма",dial:"95"},
+{code:"AF",name:"Афганистан",dial:"93"},{code:"IQ",name:"Ирак",dial:"964"},{code:"JO",name:"Иордания",dial:"962"},
+{code:"LB",name:"Ливан",dial:"961"},{code:"BH",name:"Бахрейн",dial:"973"},{code:"QA",name:"Катар",dial:"974"},
+{code:"KW",name:"Кувейт",dial:"965"},{code:"OM",name:"Оман",dial:"968"},{code:"SA",name:"Саудовская Аравия",dial:"966"},
+{code:"AE",name:"ОАЭ",dial:"971"},{code:"IL",name:"Израиль",dial:"972"},{code:"SY",name:"Сирия",dial:"963"},
+{code:"YE",name:"Йемен",dial:"967"},{code:"EG",name:"Египет",dial:"20"},{code:"LY",name:"Ливия",dial:"218"},
+{code:"TN",name:"Тунис",dial:"216"},{code:"DZ",name:"Алжир",dial:"213"},{code:"MA",name:"Марокко",dial:"212"},
+{code:"SD",name:"Судан",dial:"249"},{code:"SS",name:"Южный Судан",dial:"211"},{code:"ET",name:"Эфиопия",dial:"251"},
+{code:"KE",name:"Кения",dial:"254"},{code:"UG",name:"Уганда",dial:"256"},{code:"TZ",name:"Танзания",dial:"255"},
+{code:"RW",name:"Руанда",dial:"250"},{code:"BI",name:"Бурунди",dial:"257"},{code:"CD",name:"ДР Конго",dial:"243"},
+{code:"CG",name:"Конго",dial:"242"},{code:"CM",name:"Камерун",dial:"237"},{code:"GA",name:"Габон",dial:"241"},
+{code:"GQ",name:"Экваториальная Гвинея",dial:"240"},{code:"ST",name:"Сан-Томе и Принсипи",dial:"239"},
+{code:"GW",name:"Гвинея-Бисау",dial:"245"},{code:"GN",name:"Гвинея",dial:"224"},{code:"SL",name:"Сьерра-Леоне",dial:"232"},
+{code:"LR",name:"Либерия",dial:"231"},{code:"ML",name:"Мали",dial:"223"},{code:"NE",name:"Нигер",dial:"227"},
+{code:"BF",name:"Буркина-Фасо",dial:"226"},{code:"TG",name:"Того",dial:"228"},{code:"BJ",name:"Бенин",dial:"229"},
+{code:"GH",name:"Гана",dial:"233"},{code:"NG",name:"Нигерия",dial:"234"},{code:"CM",name:"Камерун",dial:"237"},
+{code:"CF",name:"ЦАР",dial:"236"},{code:"TD",name:"Чад",dial:"235"},{code:"NA",name:"Намибия",dial:"264"},
+{code:"BW",name:"Ботсвана",dial:"267"},{code:"ZW",name:"Зимбабве",dial:"263"},{code:"ZM",name:"Замбия",dial:"260"},
+{code:"MW",name:"Малави",dial:"265"},{code:"MZ",name:"Мозамбик",dial:"258"},{code:"MG",name:"Мадагаскар",dial:"261"},
+{code:"MU",name:"Маврикий",dial:"230"},{code:"SC",name:"Сейшелы",dial:"248"},{code:"CV",name:"Кабо-Верде",dial:"238"},
+{code:"SO",name:"Сомали",dial:"252"},{code:"DJ",name:"Джибути",dial:"253"},{code:"ER",name:"Эритрея",dial:"291"},
+{code:"SZ",name:"Свазиленд",dial:"268"},{code:"LS",name:"Лесото",dial:"266"}
+];
+
+function populateCountries(selectId){
+    var sel=document.getElementById(selectId);
+    sel.innerHTML=COUNTRIES.map(function(c){
+        return '<option value="'+c.code+'">'+c.name+' (+'+c.dial+')</option>';
+    }).join('');
+    if(selectId==='validateCountry'){
+        var mdIdx=COUNTRIES.findIndex(function(c){return c.code==='MD'});
+        if(mdIdx>=0)sel.selectedIndex=mdIdx;
+    }
+}
 
 function showPage(id,btn){
     document.querySelectorAll(".page").forEach(function(p){p.className="page"});
@@ -255,15 +385,10 @@ function toggleService(el,svc){
 
 function updateStatus(){
     fetch("/api/status").then(function(r){return r.json()}).then(function(d){
-        var el=document.getElementById("connStatus");
-        if(d.ready){
-            el.textContent="WhatsApp: online";el.className="status status-ok";
-        }else if(d.qr){
-            el.textContent="WhatsApp: QR";el.className="status status-off";
-            showQR(d.qr);
-        }else{
-            el.textContent="WhatsApp: offline";el.className="status status-off";
-        }
+        var el=document.getElementById("waStatus");
+        if(d.ready){el.textContent="WhatsApp: online";el.className="status status-ok";document.getElementById("disconnectBtn").style.display="inline-flex"}
+        else if(d.qr){el.textContent="WhatsApp: QR ready";el.className="status status-wait";showQR(d.qr)}
+        else{el.textContent="WhatsApp: offline";el.className="status status-off";document.getElementById("disconnectBtn").style.display="none"}
     });
 }
 
@@ -276,54 +401,69 @@ function connect(){
     });
 }
 
+function disconnect(){
+    location.reload();
+}
+
 function showQR(qr){
     document.getElementById("qrBox").innerHTML=
-        "<p style='margin-bottom:10px;color:#60a5fa;'>Отсканируйте QR код</p>"+
-        "<img src='https://api.qrserver.com/v1/create-qr-code/?size=280x280&data="+encodeURIComponent(qr)+"'>"+
-        "<p style='margin-top:10px;font-size:11px;color:#555;'>WhatsApp → Настройки → Привязанные устройства</p>";
+        "<p style='margin-bottom:8px;color:#60a5fa;font-size:12px'>Отсканируйте QR код</p>"+
+        "<img src='https://api.qrserver.com/v1/create-qr-code/?size=260x260&data="+encodeURIComponent(qr)+"'>"+
+        "<p style='margin-top:8px;font-size:10px;color:#555'>WhatsApp → Настройки → Привязанные устройства → Привязать</p>";
 }
 
 function validateSingle(){
     var phone=document.getElementById("validateInput").value.trim();
     var country=document.getElementById("validateCountry").value;
     if(!phone)return alert("Введите номер");
-    document.getElementById("validateResult").innerHTML="<div style='color:#7a8ba8;'>Проверка...</div>";
+    document.getElementById("validateResult").innerHTML="<span style='color:#7a8ba8'>Проверка...</span>";
     fetch("/api/validate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({phone:phone,country:country})})
     .then(function(r){return r.json()}).then(function(d){
         var el=document.getElementById("validateResult");
         if(d.error){el.innerHTML="<div class='single-result'><span class='badge badge-err'>Ошибка</span> "+d.error+"</div>";return}
-        var html="<div class='single-result'>"+
+        el.innerHTML="<div class='single-result'>"+
             "<h4>"+(d.valid?"&#10004; Валидный номер":"&#10008; Невалидный номер")+"</h4>"+
             "<div class='result-row'><span class='result-label'>Страна</span><span class='result-value'>"+d.country+"</span></div>"+
             "<div class='result-row'><span class='result-label'>Код страны</span><span class='result-value'>"+d.countryCode+"</span></div>"+
             "<div class='result-row'><span class='result-label'>Номер</span><span class='result-value'>"+d.nationalNumber+"</span></div>"+
             "<div class='result-row'><span class='result-label'>Тип</span><span class='result-value'>"+d.type+"</span></div>"+
             "<div class='result-row'><span class='result-label'>E.164</span><span class='result-value'>"+d.formatted+"</span></div>"+
-            "<div class='result-row'><span class='result-label'>Национальный</span><span class='result-value'>"+d.formattedNational+"</span></div>"+
-            "</div>";
-        el.innerHTML=html;
+            "<div class='result-row'><span class='result-label'>Национальный</span><span class='result-value'>"+d.formattedNational+"</span></div></div>";
     });
 }
 
 function checkSingle(){
     var phone=document.getElementById("phoneInput").value.trim();
     if(!phone)return alert("Введите номер");
-    document.getElementById("singleResult").innerHTML="<div style='color:#7a8ba8;'>Проверка...</div>";
-    fetch("/api/check",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({phone:phone})})
+    document.getElementById("singleResult").innerHTML="<span style='color:#7a8ba8'>Проверка...</span>";
+    var svcs=['validation'].concat(MESSENGERS.map(function(m){return m.id}));
+    fetch("/api/check",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({phone:phone,services:svcs})})
     .then(function(r){return r.json()}).then(function(d){
         var el=document.getElementById("singleResult");
-        if(d.error){el.innerHTML="<div style='color:#f87171;'>Ошибка: "+d.error+"</div>";return}
+        if(d.error){el.innerHTML="<span style='color:#f87171'>"+d.error+"</span>";return}
         var v=d.validation||{};
-        var w=d.whatsapp||{};
-        var html="<div class='single-result'>"+
-            "<h4>"+d.phone+"</h4>"+
+        var html="<div class='single-result'><h4>"+d.phone+
+            (d.detectedCountry?" ("+d.detectedCountry+")":"")+"</h4>"+
             "<div class='result-row'><span class='result-label'>Валиден</span><span class='result-value'>"+(v.valid?"&#10004; Да":"&#10008; Нет")+"</span></div>"+
             "<div class='result-row'><span class='result-label'>Страна</span><span class='result-value'>"+(v.country||"-")+"</span></div>"+
             "<div class='result-row'><span class='result-label'>Тип</span><span class='result-value'>"+(v.type||"-")+"</span></div>"+
             "<div class='result-row'><span class='result-label'>E.164</span><span class='result-value'>"+(v.formatted||"-")+"</span></div>";
-        if(w.status){
-            html+="<div class='result-row'><span class='result-label'>WhatsApp</span><span class='result-value'>"+(w.registered?"<span class='badge badge-yes'>Зарегистрирован</span>":"<span class='badge badge-no'>Не найден</span>")+"</span></div>";
-            if(w.profile_pic)html+="<div class='result-row'><span class='result-label'>Фото</span><span class='result-value'><img src='"+w.profile_pic+"' style='width:32px;height:32px;border-radius:50%;'></span></div>";
+        if(d.services){
+            html+="<div style='margin-top:8px;padding-top:6px;border-top:1px solid #222'>"+
+                "<div style='font-size:11px;color:#60a5fa;margin-bottom:6px;font-weight:600'>Мессенджеры:</div>"+
+                "<div class='messenger-results'>";
+            MESSENGERS.forEach(function(m){
+                var s=d.services[m.id];
+                if(!s)return;
+                var badge='';
+                if(s.status==='registered')badge='<span class="badge badge-yes">Есть</span>';
+                else if(s.status==='not_registered')badge='<span class="badge badge-no">Нет</span>';
+                else if(s.status==='not_available')badge='<span class="badge badge-na">N/A</span>';
+                else if(s.status==='error'||s.status==='config_required')badge='<span class="badge badge-err">'+s.error+'</span>';
+                else badge='<span class="badge badge-info">'+s.status+'</span>';
+                html+='<div class="messenger-item"><span class="name">'+m.name+'</span>'+badge+'</div>';
+            });
+            html+="</div></div>";
         }
         html+="</div>";
         el.innerHTML=html;
@@ -332,15 +472,12 @@ function checkSingle(){
 
 function handleFile(inp){
     if(!inp.files.length)return;
-    var file=inp.files[0];
-    var fd=new FormData();
-    fd.append("file",file);
-    document.getElementById("batchInput").value="Загрузка файла...";
+    var fd=new FormData();fd.append("file",inp.files[0]);
+    document.getElementById("batchInput").value="Загрузка...";
     fetch("/api/upload",{method:"POST",body:fd}).then(function(r){return r.json()}).then(function(d){
         if(d.error){alert(d.error);document.getElementById("batchInput").value="";return}
-        batchPhones=d.phones;
         document.getElementById("batchInput").value=d.phones.join("\n");
-        alert("Найдено "+d.count+" номеров в файле "+d.filename);
+        alert("Найдено "+d.count+" номеров из "+d.filename);
     });
 }
 
@@ -354,38 +491,43 @@ fileDrop.addEventListener("drop",function(e){
         document.getElementById("batchInput").value="Загрузка...";
         fetch("/api/upload",{method:"POST",body:fd}).then(function(r){return r.json()}).then(function(d){
             if(d.error){alert(d.error);document.getElementById("batchInput").value="";return}
-            batchPhones=d.phones;
             document.getElementById("batchInput").value=d.phones.join("\n");
             alert("Найдено "+d.count+" номеров");
         });
     }
 });
 
+function buildBatchHeader(services){
+    var head=document.getElementById("batchHead");
+    var html="<th>#</th><th>Номер</th><th>Страна</th><th>Тип</th><th>Валиден</th>";
+    MESSENGERS.forEach(function(m){
+        if(services.indexOf(m.id)>=0)html+="<th>"+m.name+"</th>";
+    });
+    html+="<th>Формат</th>";
+    head.innerHTML=html;
+}
+
 function startBatch(){
     var lines=document.getElementById("batchInput").value.trim().split("\n").filter(function(l){return l.trim()});
     if(!lines.length)return alert("Введите номера или загрузите файл");
     var delay=parseInt(document.getElementById("delaySelect").value)||1500;
-    var country=document.getElementById("batchCountry").value;
     if(!confirm("Проверить "+lines.length+" номеров?\nПроверки: "+selectedServices.join(", ")))return;
-
     fetch("/api/check-batch",{method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({phones:lines,services:selectedServices,delay:delay,country:country})})
+        body:JSON.stringify({phones:lines,services:selectedServices,delay:delay})})
     .then(function(r){return r.json()}).then(function(d){
         if(d.error)return alert(d.error);
         document.getElementById("progressCard").style.display="block";
         document.getElementById("resultsCard").style.display="block";
         document.getElementById("stopBtn").style.display="inline-flex";
-        document.getElementById("dlBtn").style.display="none";
+        document.getElementById("dlJsonBtn").style.display="none";
         document.getElementById("dlCsvBtn").style.display="none";
+        buildBatchHeader(selectedServices);
         startBatchPolling();
     });
 }
 
 function stopBatch(){
-    fetch("/api/check-batch",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({phones:[]})}).catch(function(){});
-    fetch("/api/check-progress").then(function(r){return r.json()}).then(function(d){
-        if(d.status!=="done")alert("Остановка...");
-    });
+    fetch("/api/stop",{method:"POST"});
 }
 
 function startBatchPolling(){
@@ -400,86 +542,62 @@ function pollBatch(){
         var pct=p.total?(p.current/p.total*100):0;
         document.getElementById("batchBar").style.width=pct+"%";
         document.getElementById("phaseLabel").textContent=p.status||"";
-
         if(p.status==="done"){
             clearInterval(pollInterval);
             document.getElementById("stopBtn").style.display="none";
-            document.getElementById("dlBtn").style.display="inline-flex";
+            document.getElementById("dlJsonBtn").style.display="inline-flex";
             document.getElementById("dlCsvBtn").style.display="inline-flex";
-            loadBatchResults();
         }
     });
-
     fetch("/api/results").then(function(r){return r.json()}).then(function(results){
         if(!results.length)return;
         document.getElementById("resultCount").textContent="("+results.length+")";
         var tbody=document.getElementById("batchBody");
         var recent=results.slice(-100).reverse();
-        var validCount=0,invalidCount=0,waYes=0,waNo=0;
-        results.forEach(function(r){
-            if(r.validation&&r.validation.valid)validCount++;else invalidCount++;
-            if(r.services&&r.services.whatsapp&&r.services.whatsapp.registered)waYes++;
-            if(r.services&&r.services.whatsapp&&r.services.whatsapp.registered===false)waNo++;
-        });
+        var validCount=0,invalidCount=0;
+        results.forEach(function(r){if(r.validation&&r.validation.valid)validCount++;else invalidCount++});
         document.getElementById("statValid").textContent=validCount;
         document.getElementById("statInvalid").textContent=invalidCount;
-
         tbody.innerHTML=recent.map(function(r,i){
             var v=r.validation||{};
-            var w=r.services?r.services.whatsapp||{}:{};
             var vBadge=v.valid?'<span class="badge badge-yes">Да</span>':'<span class="badge badge-no">Нет</span>';
-            var wBadge="-";
-            if(w.status==="registered")wBadge='<span class="badge badge-yes">Да</span>';
-            else if(w.status==="not_registered")wBadge='<span class="badge badge-no">Нет</span>';
-            else if(w.status==="error")wBadge='<span class="badge badge-err">'+w.error+'</span>';
-            return"<tr><td>"+(results.length-i)+"</td>"+
-                "<td><strong>"+r.phone+"</strong></td>"+
-                "<td>"+(v.country||"-")+"</td>"+
-                "<td>"+(v.type||"-")+"</td>"+
-                "<td>"+vBadge+"</td>"+
-                "<td>"+wBadge+"</td>"+
-                "<td style='font-size:10px;color:#555'>"+(v.formatted||"-")+"</td></tr>";
+            var row="<td>"+(results.length-i)+"</td><td><strong>"+r.phone+"</strong></td><td>"+(v.country||"-")+"</td><td>"+(v.type||"-")+"</td><td>"+vBadge+"</td>";
+            MESSENGERS.forEach(function(m){
+                if(selectedServices.indexOf(m.id)>=0){
+                    var s=r.services?r.services[m.id]||{}:{};
+                    var badge="-";
+                    if(s.status==="registered")badge='<span class="badge badge-yes">Да</span>';
+                    else if(s.status==="not_registered")badge='<span class="badge badge-no">Нет</span>';
+                    else if(s.status==="not_available")badge='<span class="badge badge-na">N/A</span>';
+                    else if(s.status==="error"||s.status==="config_required")badge='<span class="badge badge-err">'+(s.error||'ERR')+'</span>';
+                    else badge='<span class="badge badge-info">'+s.status+'</span>';
+                    row+="<td>"+badge+"</td>";
+                }
+            });
+            row+="<td style='font-size:9px;color:#555'>"+(v.formatted||"-")+"</td>";
+            return"<tr>"+row+"</tr>";
         }).join("");
     });
 }
 
-function loadBatchResults(){
-    fetch("/api/results").then(function(r){return r.json()}).then(function(results){
-        var valid=results.filter(function(r){return r.validation&&r.validation.valid}).length;
-        var invalid=results.filter(function(r){return !r.validation||!r.validation.valid}).length;
-        document.getElementById("statValid").textContent=valid;
-        document.getElementById("statInvalid").textContent=invalid;
-    });
-}
-
-function downloadResults(){window.location="/api/download-results"}
-function downloadCSV(){
-    fetch("/api/results").then(function(r){return r.json()}).then(function(results){
-        var csv="Phone,Valid,Country,Type,E164,WhatsApp,Error\n";
-        results.forEach(function(r){
-            var v=r.validation||{};
-            var w=r.services?r.services.whatsapp||{}:{};
-            csv+='"'+r.phone+'",'+(v.valid||false)+',"'+(v.country||"")+'","'+(v.type||"")+'","'+(v.formatted||"")+'",'+(!w.status?"":w.registered)+',"'+(w.error||"")+'"\n';
-        });
-        var blob=new Blob([csv],{type:"text/csv"});
-        var a=document.createElement("a");a.href=URL.createObjectURL(blob);
-        a.download="phone_results_"+Date.now()+".csv";a.click();
-    });
-}
+function downloadJSON(){window.location="/api/download-results"}
+function downloadCSV(){window.location="/api/download-csv"}
 
 function loadFiles(){
     fetch("/api/files").then(function(r){return r.json()}).then(function(f){
         var el=document.getElementById("filesList");
         if(!f.length){el.innerHTML='<div class="empty-msg">Нет файлов</div>';return}
-        el.innerHTML='<div style="display:flex;flex-direction:column;gap:4px;">'+f.map(function(x){
-            return'<div style="padding:10px 14px;background:#14141f;border-radius:6px;display:flex;justify-content:space-between;align-items:center;">'+
-                '<span style="color:#e0e0e0;font-size:13px;">'+x.filename+'</span>'+
-                '<span style="font-size:12px;color:#7a8ba8;">'+x.count+' номеров</span>'+
-                '<a class="btn btn-secondary btn-sm" href="/api/files/'+encodeURIComponent(x.filename)+'" download>Скачать</a></div>';
-        }).join("")+"</div>";
+        el.innerHTML=f.map(function(x){
+            return'<div style="padding:8px 12px;background:#14141f;border-radius:5px;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">'+
+                '<span style="color:#e0e0e0;font-size:12px">'+x.filename+'</span>'+
+                '<span style="font-size:11px;color:#7a8ba8;margin:0 10px">'+x.count+' шт</span>'+
+                '<div><a class="btn btn-secondary btn-sm" href="/api/file/'+encodeURIComponent(x.filename)+'" download style="margin-right:4px">JSON</a>'+
+                '<a class="btn btn-secondary btn-sm" href="/api/download-csv?file='+encodeURIComponent(x.filename)+'" download>CSV</a></div></div>';
+        }).join("");
     });
 }
 
+populateCountries("validateCountry");
 updateStatus();
 if(pollInterval)clearInterval(pollInterval);
 pollInterval=setInterval(updateStatus,5000);

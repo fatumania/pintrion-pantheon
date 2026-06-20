@@ -2,10 +2,17 @@ __pycache__/
 *.pyc
 node_modules/
 .wwebjs_auth/
+.wwebjs_cache/
 results/
 logs/
 uploads/
 *.txt
 !requirements.txt
 run.bat
+run.vbs
 .env
+.env.local
+config.json
+*.log
+.DS_Store
+Thumbs.db

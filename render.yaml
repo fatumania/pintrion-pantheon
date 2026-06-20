@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: pintrion-pantheon
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node dashboard/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production

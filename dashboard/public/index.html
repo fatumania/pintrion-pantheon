@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pintrion Pantheon</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --bg:#0a0a0f;
+            --card:#12121a;
+            --card-hover:#1a1a25;
+            --border:#1e1e2e;
+            --text:#e4e4e7;
+            --text-muted:#71717a;
+            --accent:#6366f1;
+            --accent-glow:rgba(99,102,241,0.15);
+            --green:#22c55e;
+            --orange:#f97316;
+            --pink:#ec4899;
+            --cyan:#06b6d4;
+        }
+        body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+        
+        .bg-grid{position:fixed;top:0;left:0;width:100%;height:100%;background-image:
+            linear-gradient(rgba(99,102,241,0.03) 1px,transparent 1px),
+            linear-gradient(90deg,rgba(99,102,241,0.03) 1px,transparent 1px);
+            background-size:60px 60px;pointer-events:none;z-index:0}
+        
+        .bg-glow{position:fixed;top:-200px;left:50%;transform:translateX(-50%);width:800px;height:500px;
+            background:radial-gradient(ellipse,rgba(99,102,241,0.08),transparent 70%);pointer-events:none;z-index:0}
+        
+        .container{max-width:1200px;margin:0 auto;padding:40px 24px;position:relative;z-index:1}
+        
+        .header{text-align:center;margin-bottom:60px}
+        .logo{display:inline-flex;align-items:center;gap:14px;margin-bottom:16px}
+        .logo-icon{width:56px;height:56px;background:linear-gradient(135deg,var(--accent),#8b5cf6);
+            border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;
+            box-shadow:0 0 40px rgba(99,102,241,0.3)}
+        .logo-text{font-size:36px;font-weight:800;background:linear-gradient(135deg,#fff,#a5b4fc);
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .subtitle{color:var(--text-muted);font-size:15px;font-weight:400;margin-top:8px}
+        
+        .services{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px}
+        
+        .service-card{
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius:16px;
+            padding:28px;
+            transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+            cursor:pointer;
+            position:relative;
+            overflow:hidden;
+            text-decoration:none;
+            color:inherit;
+            display:block;
+        }
+        .service-card::before{
+            content:'';
+            position:absolute;
+            top:0;left:0;right:0;
+            height:3px;
+            background:var(--card-accent);
+            opacity:0;
+            transition:opacity 0.3s;
+        }
+        .service-card:hover{
+            transform:translateY(-4px);
+            border-color:var(--card-accent);
+            box-shadow:0 20px 40px rgba(0,0,0,0.3),0 0 30px var(--card-glow);
+        }
+        .service-card:hover::before{opacity:1}
+        
+        .card-header{display:flex;align-items:flex-start;gap:16px;margin-bottom:16px}
+        .card-icon{
+            width:52px;height:52px;
+            border-radius:14px;
+            display:flex;align-items:center;justify-content:center;
+            font-size:24px;
+            flex-shrink:0;
+            position:relative;
+        }
+        .card-icon::after{
+            content:'';
+            position:absolute;
+            inset:-2px;
+            border-radius:16px;
+            background:inherit;
+            filter:blur(12px);
+            opacity:0.3;
+            z-index:-1;
+        }
+        .card-title{font-size:18px;font-weight:700;margin-bottom:4px}
+        .card-desc{font-size:13px;color:var(--text-muted);line-height:1.5}
+        
+        .card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+        .card-tag{font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;background:rgba(255,255,255,0.05)}
+        .card-arrow{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.05);
+            display:flex;align-items:center;justify-content:center;transition:all 0.3s;font-size:14px}
+        .service-card:hover .card-arrow{background:var(--card-accent);color:#fff}
+        
+        .card-1{--card-accent:#22c55e;--card-glow:rgba(34,197,94,0.1)}
+        .card-2{--card-accent:#f97316;--card-glow:rgba(249,115,22,0.1)}
+        .card-3{--card-accent:#06b6d4;--card-glow:rgba(6,182,212,0.1)}
+        .card-4{--card-accent:#ec4899;--card-glow:rgba(236,72,153,0.1)}
+        .card-5{--card-accent:#8b5cf6;--card-glow:rgba(139,92,246,0.1)}
+        
+        .footer{text-align:center;margin-top:60px;padding-top:30px;border-top:1px solid var(--border)}
+        .footer p{color:var(--text-muted);font-size:12px}
+        .footer a{color:var(--accent);text-decoration:none}
+        
+        @media(max-width:768px){
+            .container{padding:24px 16px}
+            .services{grid-template-columns:1fr}
+            .logo-text{font-size:28px}
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+    
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">&#9883;</div>
+                <span class="logo-text">Pintrion Pantheon</span>
+            </div>
+            <p class="subtitle">Мульти-инструментальная платформа для работы с данными</p>
+        </header>
+        
+        <div class="services">
+            <a href="/web-scraper" class="service-card card-1">
+                <div class="card-header">
+                    <div class="card-icon" style="background:rgba(34,197,94,0.15)">&#128270;</div>
+                    <div>
+                        <div class="card-title">Web Scraper</div>
+                        <div class="card-desc">Парсинг веб-страниц. Извлечение текста, ссылок, изображений и структурированных данных с любого сайта.</div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <span class="card-tag">Python / Flask</span>
+                    <div class="card-arrow">&#8594;</div>
+                </div>
+            </a>
+            
+            <a href="/email-sender" class="service-card card-2">
+                <div class="card-header">
+                    <div class="card-icon" style="background:rgba(249,115,22,0.15)">&#9993;</div>
+                    <div>
+                        <div class="card-title">Email Sender</div>
+                        <div class="card-desc">Массовая рассылка писем через SMTP. Задержки, валидация, логирование, шаблоны.</div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <span class="card-tag">Python / Flask</span>
+                    <div class="card-arrow">&#8594;</div>
+                </div>
+            </a>
+            
+            <a href="/text-uniquifier" class="service-card card-3">
+                <div class="card-header">
+                    <div class="card-icon" style="background:rgba(6,182,212,0.15)">&#10024;</div>
+                    <div>
+                        <div class="card-title">Text Uniquifier</div>
+                        <div class="card-desc">Уникализация текста через ИИ. Генерация сотен вариантов с сохранением смысла.</div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <span class="card-tag">Python / Flask</span>
+                    <div class="card-arrow">&#8594;</div>
+                </div>
+            </a>
+            
+            <a href="/google-maps-scraper" class="service-card card-4">
+                <div class="card-header">
+                    <div class="card-icon" style="background:rgba(236,72,153,0.15)">&#128205;</div>
+                    <div>
+                        <div class="card-title">Google Maps Scraper</div>
+                        <div class="card-desc">Сбор данных бизнесов из Google Maps. Названия, адреса, телефоны, сайты, email.</div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <span class="card-tag">Python / Flask</span>
+                    <div class="card-arrow">&#8594;</div>
+                </div>
+            </a>
+            
+            <a href="/phone-checker" class="service-card card-5">
+                <div class="card-header">
+                    <div class="card-icon" style="background:rgba(139,92,246,0.15)">&#128241;</div>
+                    <div>
+                        <div class="card-title">Phone Checker</div>
+                        <div class="card-desc">Проверка номеров в мессенджерах. WhatsApp, Telegram, Viber, Signal, IMO.</div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <span class="card-tag">Node.js / Express</span>
+                    <div class="card-arrow">&#8594;</div>
+                </div>
+            </a>
+        </div>
+        
+        <footer class="footer">
+            <p>Pintrion Pantheon v1.0 &copy; 2026</p>
+        </footer>
+    </div>
+</body>
+</html>

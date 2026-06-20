@@ -1,15 +1,30 @@
-# Pintrion Pantheon - 5 Tools
+# Pintrion Pantheon
 
-## Services
+Мульти-инструментальная платформа для работы с данными.
 
-| Service | Port | Tech | URL Path |
-|---------|------|------|----------|
-| Web Scraper | 5555 | Python | `/web-scraper` |
-| Email Sender | 5556 | Python | `/email-sender` |
-| Text Uniquifier | 5557 | Python | `/text-uniquifier` |
-| Google Maps Scraper | 5558 | Python | `/google-maps-scraper` |
-| WhatsApp Checker | 5559 | Node.js | `/whatsapp-checker` |
+## Сервисы
 
-## Deploy to Railway
+| Сервис | Описание | Технологии |
+|--------|----------|------------|
+| Web Scraper | Парсинг веб-страниц | Python / Flask |
+| Email Sender | Массовая рассылка писем | Python / Flask |
+| Text Uniquifier | Уникализация текста через ИИ | Python / Flask |
+| Google Maps Scraper | Сбор данных бизнесов | Python / Flask |
+| Phone Checker | Проверка номеров в мессенджерах | Node.js / Express |
 
-Each service is deployed separately. Create 5 services in Railway from this repo.
+## Деплой на Render.com
+
+1. Fork репозитория
+2. Подключи к Render.com
+3. Создай Web Service
+4. Build Command: `npm install`
+5. Start Command: `node dashboard/server.js`
+
+## Локальный запуск
+
+```bash
+npm install
+npm start
+```
+
+Открой: http://localhost:10000
