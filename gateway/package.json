@@ -1,0 +1,9 @@
+{
+  "name": "gateway",
+  "version": "1.0.0",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^5.2.1",
+    "http-proxy-middleware": "^3.0.0"
+  }
+}

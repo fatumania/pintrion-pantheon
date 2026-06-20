@@ -82,7 +82,7 @@ def call_ai(api_key, model, text, prompt_type="medium"):
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:5557",
+        "HTTP-Referer": "https://pintrion-pantheon.onrender.com",
     }
 
     payload = {

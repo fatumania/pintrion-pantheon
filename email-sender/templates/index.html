@@ -308,7 +308,7 @@ function toggleUnique(){
 
 async function checkVariants(){
     try{
-        const r=await fetch("http://localhost:5557/api/files");
+        const r=await fetch("/text-uniquifier/api/files");
         const f=await r.json();
         if(f.length){
             variantsAvailable=f[0].variants;
