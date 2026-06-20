@@ -1,8 +1,9 @@
 const express = require('express');
 const { createProxyMiddleware } = require('http-proxy-middleware');
+const path = require('path');
 const app = express();
 
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 3000;
 
 const services = [
   { path: '/web-scraper', target: 'http://127.0.0.1:5555' },
@@ -12,30 +13,23 @@ const services = [
   { path: '/phone-checker', target: 'http://127.0.0.1:5559' },
 ];
 
-services.forEach(({ path, target }) => {
-  app.use(path, createProxyMiddleware({
+services.forEach(({ path: svcPath, target }) => {
+  app.use(svcPath, createProxyMiddleware({
     target,
     changeOrigin: true,
-    pathRewrite: (pathStr) => pathStr.replace(new RegExp(`^${path}`), ''),
+    pathRewrite: (pathStr) => pathStr.replace(new RegExp(`^${svcPath}`), ''),
     onError(err, req, res) {
-      console.error(`Proxy error for ${path}:`, err.message);
-      res.status(502).json({ error: 'Service unavailable', path });
+      console.error(`Proxy error for ${svcPath}:`, err.message);
+      res.status(502).json({ error: 'Service unavailable', path: svcPath });
     },
   }));
 });
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', services: services.map(s => s.path), timestamp: new Date().toISOString() });
 });
 
-app.use('/', createProxyMiddleware({
-  target: 'http://127.0.0.1:10000',
-  changeOrigin: true,
-  onError(err, req, res) {
-    console.error('Dashboard proxy error:', err.message);
-    res.status(502).json({ error: 'Dashboard unavailable' });
-  },
-}));
+app.use('/', express.static(path.join(__dirname, '..', 'dashboard', 'public')));
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Gateway listening on 0.0.0.0:${PORT}`);

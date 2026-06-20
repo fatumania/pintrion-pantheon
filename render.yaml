@@ -3,9 +3,6 @@ services:
     name: pintrion-pantheon
     runtime: docker
     plan: free
-    dockerfilePath: ./Dockerfile
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000

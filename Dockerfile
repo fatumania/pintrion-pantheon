@@ -60,6 +60,6 @@ COPY . /app/
 # Make start script executable
 RUN chmod +x /app/start.sh
 
-EXPOSE 10000
+EXPOSE 3000
 
 CMD ["/app/start.sh"]

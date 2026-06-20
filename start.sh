@@ -20,12 +20,11 @@ cd /app/google-maps-scraper && python3 app.py &
 echo "Starting WhatsApp Checker on port 5559..."
 cd /app/whatsapp-checker && node server.js &
 
-echo "Starting Dashboard on port 10000..."
-cd /app/dashboard && node server.js &
-
-# Start Gateway (wait a moment for services to start)
+# Wait for services to start
 sleep 3
-echo "Starting Gateway on port ${PORT:-10000}..."
+
+# Start Gateway (serves dashboard + proxies all services)
+echo "Starting Gateway on port ${PORT:-3000}..."
 cd /app/gateway && node server.js &
 
 echo "All services started!"
